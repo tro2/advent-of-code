@@ -43,10 +43,10 @@ pub fn part_02(path: &str) -> u32 {
         let win_count = get_win_count(&winning_nums, &found_nums);
 
         // update card counts
-        let num_copies = *card_counts.get(&game_id).unwrap_or(&0) + 1;
+        let num_copies = card_counts.get(&game_id).copied().unwrap_or(0) + 1;
         card_counts.insert(game_id, num_copies);
         for i in game_id + 1..game_id + win_count + 1 {
-            let new_count = num_copies + card_counts.get(&i).unwrap_or(&0);
+            let new_count = num_copies + card_counts.get(&i).copied().unwrap_or(0);
             card_counts.insert(i, new_count);
         }
     }
