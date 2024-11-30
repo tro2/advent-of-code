@@ -6,7 +6,7 @@ pub fn part_01(path: &str) -> u32 {
     let source = BufReader::new(File::open(path).unwrap()).lines();
     let mut sum = 0;
 
-    for line in source.filter_map(Result::ok) {
+    for line in source.map_while(Result::ok) {
         // Line format
         // Game 1: winningnum1 winningnum2 winningnum3 ... | num1 num2 ...
         let (_id, game) = line.split_once(":").unwrap();
@@ -28,7 +28,7 @@ pub fn part_02(path: &str) -> u32 {
     let source = BufReader::new(File::open(path).unwrap()).lines();
     let mut card_counts = HashMap::<u32, u32>::new();
 
-    for line in source.filter_map(Result::ok) {
+    for line in source.map_while(Result::ok) {
         // Line format
         // Game 1: winningnum1 winningnum2 winningnum3 ... | num1 num2 ...
         let (id, game) = line.split_once(":").unwrap();
