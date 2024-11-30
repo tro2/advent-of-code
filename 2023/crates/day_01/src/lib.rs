@@ -5,15 +5,13 @@ pub fn part_1(path: &str) -> u32 {
     let lines = BufReader::new(File::open(path).unwrap()).lines();
     let mut sum = 0;
 
-    for line in lines {
-        if let Ok(line) = line {
-            let tens = line.chars().find(|c|c.is_ascii_digit()).unwrap();
-            let ones = line.chars().rfind(|c|c.is_ascii_digit()).unwrap();
-            sum = sum + tens.to_digit(10).unwrap() * 10 + ones.to_digit(10).unwrap();
-        }
+    for line in lines.map_while(Result::ok) {
+        let tens = line.chars().find(|c|c.is_ascii_digit()).unwrap();
+        let ones = line.chars().rfind(|c|c.is_ascii_digit()).unwrap();
+        sum = sum + tens.to_digit(10).unwrap() * 10 + ones.to_digit(10).unwrap();
     }
 
-    return sum;
+    sum
 }
 
 pub fn parse_num(s: &str) -> Option<u32> {
@@ -36,32 +34,30 @@ pub fn parse_num(s: &str) -> Option<u32> {
     } else if s.starts_with('9') || s.starts_with("nine") {
         return Some(9);
     }
-    return None;
+    None
 }
 
 pub fn part_2(path: &str) -> u32 {
     let lines = BufReader::new(File::open(path).unwrap()).lines();
     let mut sum = 0;
 
-    for line in lines {
-        if let Ok(line) = line {
-            // Iterate forward for first digit (10's place)
-            for i in 0..line.len() {
-                if let Some(num) = parse_num(&line[i..]) {
-                    sum = sum + num * 10;
-                    break;
-                }
+    for line in lines.map_while(Result::ok) {
+        // Iterate forward for first digit (10's place)
+        for i in 0..line.len() {
+            if let Some(num) = parse_num(&line[i..]) {
+                sum += num * 10;
+                break;
             }
+        }
 
-            // Iterate backward for last digit (1's place)
-            for i in (0..line.len()).rev() {
-                if let Some(num) = parse_num(&line[i..]) {
-                    sum = sum + num;
-                    break;
-                }
+        // Iterate backward for last digit (1's place)
+        for i in (0..line.len()).rev() {
+            if let Some(num) = parse_num(&line[i..]) {
+                sum += num;
+                break;
             }
         }
     }
 
-    return sum;
+    sum
 }

@@ -22,24 +22,20 @@ impl Arrayto2DGrid for SchematicString<'_> {
     }
 }
 
-fn is_symbol(byte: u8) -> bool {
-    (byte < b'0' || byte > b'9') && byte != b'.' && byte != b'\n'
+fn is_symbol(c: char) -> bool {
+    !('0'..='9').contains(&c) && c != '.' && c != '\n'
 }
 
 fn check_neighbors_for_symbol(idx: usize, schematic: &SchematicString) -> bool {
-    Offsets::ALL.iter().any(|offset| {
-        if let Some(t_idx) = schematic.translate_idx(idx, offset) {
-            is_symbol(schematic.bytes[t_idx])
-        } else {
-            false
-        }
-    })
+    Offsets::ALL.iter()
+        .filter_map(|offset| schematic.translate_idx(idx, offset))
+        .any(|t_idx| is_symbol(schematic.bytes[t_idx] as char))
 }
 
 // given an index that is a number, extract and parse that number
 fn parse_num(idx: usize, schematic: &SchematicString) -> u32 {
     let char = schematic.bytes[idx] as char;
-    if char.to_digit(10) == None {
+    if char.to_digit(10).is_none() {
         panic!("parse_num called on non-number");
     }
 
@@ -84,7 +80,9 @@ pub fn part_01(path: &str) -> u32 {
         }
     }
 
-    return sum;
+    // last byte should be a newline, so no need to check for existing num
+
+    sum
 }
 
 pub fn part_02(path: &str) -> u32 {
@@ -111,7 +109,6 @@ pub fn part_02(path: &str) -> u32 {
         // filter list to unique nums and if there are 2, multiply them together and add to sum
         let unique_nums = nums.iter().cloned().collect::<std::collections::HashSet<_>>();
         if unique_nums.len() == 2 {
-            println!("{:?}", unique_nums);
             sum += unique_nums.iter().product::<u32>();
         }
     }
