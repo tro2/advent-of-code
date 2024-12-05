@@ -6,7 +6,7 @@ pub fn part_01(path: &str) -> u32 {
         .map(|line| format!(".{}", line))
         .collect::<Vec<String>>()
         .join("\n");
-    source.push_str("\n");
+    source.push('\n');
     let line_len = source.find("\n").unwrap() + 1;
     source.push_str(&".".repeat(line_len));
 
@@ -30,6 +30,74 @@ pub fn part_01(path: &str) -> u32 {
     let ne_rev = c_box.iter(IterDirection::DiagNWtoSE).count_substring(&target);
 
     row + row_rev + col + col_rev + nw + nw_rev + ne + ne_rev
+}
+
+pub fn part_02(path: &str) -> u32 {
+    let source = read_to_string(path).unwrap();
+    let mut sum = 0;
+
+    // iterate over all 3 by 3 blocks in the source string
+
+    let patterns = [
+        [
+            "M M",
+            " A ",
+            "S S"
+        ],
+        [
+            "S S",
+            " A ",
+            "M M"
+        ],
+        [
+            "M S",
+            " A ",
+            "M S"
+        ],
+        [
+            "S M",
+            " A ",
+            "S M"
+        ]
+    ];
+
+
+    let lines = source
+        .lines()
+        .collect::<Vec<&str>>();
+
+    let line_groups = lines.windows(3);
+
+    for group in line_groups {
+        let mut blocks = Vec::new();
+
+        for line in group {
+            let line_windows = line.as_bytes().windows(3);
+            for (idx, window) in line_windows.enumerate() {
+                if blocks.len() <= idx {
+                    blocks.push(Vec::new())
+                }
+                // convert window to str
+                blocks[idx].push(std::str::from_utf8(window).unwrap());
+            }
+        }
+
+        sum += blocks.iter()
+            .filter(|block| {
+                patterns.iter().any(|pattern| compare(block, pattern))
+            })
+            .count()
+    }
+
+    sum as u32
+}
+
+fn compare(block: &[&str], pattern: &[&str; 3]) -> bool {
+    block.iter().zip(pattern.iter()).all(|(b, p)| {
+        b.bytes().zip(p.bytes()).all(|(b_byte, p_byte)| {
+            p_byte == b' ' || b_byte == p_byte
+        })
+    })
 }
 
 #[derive(Debug)]
