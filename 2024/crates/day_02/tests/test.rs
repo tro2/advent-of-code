@@ -17,5 +17,5 @@ fn d2_p2_example() {
 
 #[test]
 fn d2_p2_input() {
-    assert_eq!(day_02::part_02("tests/input.txt"), 23384288);
+    assert_eq!(day_02::part_02("tests/input.txt"), 561);
 }
