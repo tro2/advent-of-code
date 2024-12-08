@@ -74,7 +74,7 @@ pub fn part_02(path: &str) -> u32 {
         sum += result[(result.len() - 1).div(2)]
     }
 
-    sum as u32
+    sum
 }
 
 fn obeys_rules(update: &[u32], rules: &[(u32, u32)]) -> bool {
