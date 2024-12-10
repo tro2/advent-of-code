@@ -17,5 +17,5 @@ fn d9_p2_example() {
 
 #[test]
 fn d9_p2_input() {
-    assert_eq!(day_09::part_02("tests/input.txt"), 1972)
+    assert_eq!(day_09::part_02("tests/input.txt"), 6420913943576)
 }
