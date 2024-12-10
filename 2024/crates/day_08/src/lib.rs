@@ -5,7 +5,7 @@ pub fn part_01(path: &str) -> u32 {
 
     let row_len = source.find('\n').unwrap() + 1; // deliberate, newlines will not factor into coord calcs
     let col_len = source.len() / row_len;
-    let mut antennaes = HashMap::new();
+    let mut antennaes: HashMap<char, Vec<Coord>> = HashMap::new();
     let mut antinodes: HashSet<Coord> = HashSet::new();
 
     for (pos, c) in source.as_bytes().iter().enumerate() {
@@ -16,13 +16,10 @@ pub fn part_01(path: &str) -> u32 {
 
         let pos = Coord::new(pos % row_len, pos / row_len);
 
-        if antennaes.contains_key(&ch) {
-            let set: &mut Vec<Coord> = antennaes.get_mut(&ch).unwrap();
+        if let Some(set) = antennaes.get_mut(&ch) {
             set.push(pos);
         } else {
-            let mut set = Vec::new();
-            set.push(pos);
-            antennaes.insert(ch, set);
+            antennaes.insert(ch, vec![pos]);
         }
     }
 
@@ -81,7 +78,7 @@ pub fn part_02(path: &str) -> u32 {
 
     let row_len = source.find('\n').unwrap() + 1; // deliberate, newlines will not factor into coord calcs
     let col_len = source.len() / row_len;
-    let mut antennaes = HashMap::new();
+    let mut antennaes: HashMap<char, Vec<Coord>> = HashMap::new();
     let mut antinodes: HashSet<Coord> = HashSet::new();
 
     for (pos, c) in source.as_bytes().iter().enumerate() {
@@ -92,13 +89,10 @@ pub fn part_02(path: &str) -> u32 {
 
         let pos = Coord::new(pos % row_len, pos / row_len);
 
-        if antennaes.contains_key(&ch) {
-            let set: &mut Vec<Coord> = antennaes.get_mut(&ch).unwrap();
+        if let Some(set) = antennaes.get_mut(&ch) {
             set.push(pos);
         } else {
-            let mut set = Vec::new();
-            set.push(pos);
-            antennaes.insert(ch, set);
+            antennaes.insert(ch, vec![pos]);
         }
     }
 
@@ -255,7 +249,7 @@ impl Iterator for CoordIter {
 
         self.curr = self.curr + self.slope;
 
-        return Some(result);
+        Some(result)
     }
 }
 
@@ -265,11 +259,4 @@ fn gcd(a: isize, b: isize) -> isize {
     } else {
         gcd(b, a % b)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    
 }

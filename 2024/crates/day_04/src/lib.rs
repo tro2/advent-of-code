@@ -170,29 +170,39 @@ impl<'a> CharBoxIter<'a> {
         let mut buffer = Vec::new();
         let mut count = 0;
 
+        for byte in self.by_ref() {
+            buffer.push(byte as char);
+            if buffer.len() > target.len() {
+                buffer.remove(0);
+            }
+            if buffer == target {
+                count += 1;
+            }
+        }
+
         // let mut idx_buf = Vec::new();
         // let mut idx_coords = Vec::new();
         // println!("num cols {} num rows {}", self.row_len(), self.col_len());
         // let mut array: Vec<Vec<char>> = vec![vec!['.'; self.row_len()]; self.col_len()];
         // idx_buf.push(self.index);
         // idx_coords.push(self.pos());
-        while let Some(byte) = self.next() {
-            // idx_buf.push(self.index);
-            // idx_coords.push(self.pos());
-            buffer.push(byte as char);
-            if buffer.len() > target.len() {
-                // idx_buf.remove(0);
-                // idx_coords.remove(0);
-                buffer.remove(0);
-            }
-            if buffer == target {
-                // array[idx_coords[0].1 as usize][idx_coords[0].0 as usize] = target[0];
-                // array[idx_coords[1].1 as usize][idx_coords[1].0 as usize] = target[1];
-                // array[idx_coords[2].1 as usize][idx_coords[2].0 as usize] = target[2];
-                // array[idx_coords[3].1 as usize][idx_coords[3].0 as usize] = target[3];
-                count += 1;
-            }
-        }
+        // while let Some(byte) = self.next() {
+        //     idx_buf.push(self.index);
+        //     idx_coords.push(self.pos());
+        //     buffer.push(byte as char);
+        //     if buffer.len() > target.len() {
+        //         idx_buf.remove(0);
+        //         idx_coords.remove(0);
+        //         buffer.remove(0);
+        //     }
+        //     if buffer == target {
+        //         array[idx_coords[0].1 as usize][idx_coords[0].0 as usize] = target[0];
+        //         array[idx_coords[1].1 as usize][idx_coords[1].0 as usize] = target[1];
+        //         array[idx_coords[2].1 as usize][idx_coords[2].0 as usize] = target[2];
+        //         array[idx_coords[3].1 as usize][idx_coords[3].0 as usize] = target[3];
+        //         count += 1;
+        //     }
+        // }
         // println!("{:?} {:?}", self.direction, target);
         // for row in array {
         //     println!("{:?}", row);
