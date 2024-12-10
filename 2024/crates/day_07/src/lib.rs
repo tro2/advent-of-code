@@ -85,9 +85,3 @@ pub fn part_02(path: &str) -> usize {
         false
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-}
