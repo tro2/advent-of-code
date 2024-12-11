@@ -1,12 +1,13 @@
 use std::{collections::{HashMap, HashSet}, fs::read_to_string, ops::Add};
+use shared::Point;
 
 pub fn part_01(path: &str) -> u32 {
     let source = read_to_string(path).unwrap();
 
     let row_len = source.find('\n').unwrap() + 1; // deliberate, newlines will not factor into coord calcs
     let col_len = source.len() / row_len;
-    let mut antennaes: HashMap<char, Vec<Coord>> = HashMap::new();
-    let mut antinodes: HashSet<Coord> = HashSet::new();
+    let mut antennaes: HashMap<char, Vec<Point>> = HashMap::new();
+    let mut antinodes: HashSet<Point> = HashSet::new();
 
     for (pos, c) in source.as_bytes().iter().enumerate() {
         let ch = *c as char;
@@ -14,7 +15,7 @@ pub fn part_01(path: &str) -> u32 {
             continue;
         }
 
-        let pos = Coord::new(pos % row_len, pos / row_len);
+        let pos = Point::from_u(pos % row_len, pos / row_len);
 
         if let Some(set) = antennaes.get_mut(&ch) {
             set.push(pos);
@@ -26,7 +27,7 @@ pub fn part_01(path: &str) -> u32 {
     for (_/*byte*/, positions) in antennaes.iter() {
         for i in 0..positions.len() - 1 {
             for j in i + 1..positions.len() {
-                let antinode_pos = gen_positions(positions[i], positions[j], row_len, col_len);
+                let antinode_pos = gen_positions(positions[i], positions[j], row_len, col_len, false);
                 for pos in antinode_pos.iter() {
                     antinodes.insert(*pos);
                 }
@@ -78,8 +79,8 @@ pub fn part_02(path: &str) -> u32 {
 
     let row_len = source.find('\n').unwrap() + 1; // deliberate, newlines will not factor into coord calcs
     let col_len = source.len() / row_len;
-    let mut antennaes: HashMap<char, Vec<Coord>> = HashMap::new();
-    let mut antinodes: HashSet<Coord> = HashSet::new();
+    let mut antennaes: HashMap<char, Vec<Point>> = HashMap::new();
+    let mut antinodes: HashSet<Point> = HashSet::new();
 
     for (pos, c) in source.as_bytes().iter().enumerate() {
         let ch = *c as char;
@@ -87,7 +88,7 @@ pub fn part_02(path: &str) -> u32 {
             continue;
         }
 
-        let pos = Coord::new(pos % row_len, pos / row_len);
+        let pos = Point::from_u(pos % row_len, pos / row_len);
 
         if let Some(set) = antennaes.get_mut(&ch) {
             set.push(pos);
@@ -99,7 +100,7 @@ pub fn part_02(path: &str) -> u32 {
     for (_, positions) in antennaes.iter() {
         for i in 0..positions.len() - 1 {
             for j in i + 1..positions.len() {
-                let antinode_pos = gen_positions_2(positions[i], positions[j], row_len, col_len);
+                let antinode_pos = gen_positions(positions[i], positions[j], row_len, col_len, true);
                 for pos in antinode_pos.iter() {
                     antinodes.insert(*pos);
                 }
@@ -110,22 +111,23 @@ pub fn part_02(path: &str) -> u32 {
     antinodes.len() as u32
 }
 
-fn gen_positions(a: Coord, b: Coord, row_len: usize, col_len: usize) -> Vec<Coord> {
+fn gen_positions(a: Point, b: Point, row_len: usize, col_len: usize, skip_check: bool) -> Vec<Point> {
     let mut positions = Vec::new();
-    let slope = a.get_slope(b);
+    let slope = get_slope(a, b);
 
-    for pos in a.iter(slope, row_len, col_len) {
-        if pos.euclid_dist(a) == pos.euclid_dist(b).scale_by(2) ||
-           pos.euclid_dist(b) == pos.euclid_dist(a).scale_by(2) {
-            positions.push(pos);
-        }
-
-        
+    fn check(pos: Point, a: Point, b: Point) -> bool {
+        pos.euclid_dist(a) == pos.euclid_dist(b).scale_by(2) ||
+        pos.euclid_dist(b) == pos.euclid_dist(a).scale_by(2)
     }
 
-    for pos in a.iter_rev(slope, row_len, col_len) {
-        if pos.euclid_dist(a) == pos.euclid_dist(b).scale_by(2) ||
-           pos.euclid_dist(b) == pos.euclid_dist(a).scale_by(2) {
+    for pos in slope.iter(a, row_len, col_len) {
+        if skip_check || check(pos, a, b) {
+            positions.push(pos);
+        }
+    }
+
+    for pos in slope.rev_dir().iter(a, row_len, col_len) {
+        if skip_check || check(pos, a, b) {
             positions.push(pos);
         }
     }
@@ -133,112 +135,52 @@ fn gen_positions(a: Coord, b: Coord, row_len: usize, col_len: usize) -> Vec<Coor
     positions
 }
 
-fn gen_positions_2(a: Coord, b: Coord, row_len: usize, col_len: usize) -> HashSet<Coord> {
-    let mut positions = HashSet::new();
-    let slope = a.get_slope(b);
 
-    for pos in a.iter(slope, row_len, col_len) {
-        positions.insert(pos);
-    }
 
-    for pos in a.iter_rev(slope, row_len, col_len) {
-        positions.insert(pos);
-    }
-
-    positions
+#[derive(PartialEq, Eq, Copy, Clone)]
+struct Slope {
+    dx: isize,
+    dy: isize
 }
 
-#[derive(PartialEq, Eq, Hash, Copy, Clone)]
-struct Coord {
-    x: isize,
-    y: isize
-}
-
-impl Coord {
-    fn new(x: usize, y: usize) -> Self {
-        Self {
-            x: x as isize,
-            y: y as isize
-        }
-    }
-
-    fn get_slope(&self, b: Self) -> Self {
-        let rise = b.y - self.y;
-        let run = b.x - self.x;
-        let div = gcd(rise, run);
-        if div == 0 {
-            return Self {
-                x: run,
-                y: rise
-            }
-        }
-
-        Self {
-            x: run / div,
-            y: rise / div
-        }
-    }
-
+impl Slope {
     fn rev_dir(&self) -> Self {
         Self {
-            x: -self.x,
-            y: -self.y
+            dx: -self.dx,
+            dy: -self.dy
         }
     }
 
-    fn euclid_dist(&self, b: Self) -> Self {
-        Self {
-            x: (b.x - self.x).abs(),
-            y: (b.y - self.y).abs()
-        }
-    }
-
-    fn scale_by(&self, factor: isize) -> Self {
-        Self {
-            x: self.x * factor,
-            y: self.y * factor
-        }
-    }
-
-    fn iter(&self, slope: Self, row_len: usize, col_len: usize) -> CoordIter {
+    fn iter(&self, start: Point, row_len: usize, col_len: usize) -> CoordIter {
         CoordIter {
-            curr: *self,
-            slope,
-            row_len: row_len as isize,
-            col_len: col_len as isize
-        }
-    }
-
-    fn iter_rev(&self, slope: Self, row_len: usize, col_len: usize) -> CoordIter {
-        CoordIter {
-            curr: *self,
-            slope: slope.rev_dir(),
+            curr: start,
+            slope: *self,
             row_len: row_len as isize,
             col_len: col_len as isize
         }
     }
 }
 
-impl Add for Coord {
-    type Output = Coord;
+impl Add<Slope> for Point {
+    type Output = Point;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::Output {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y
+    fn add(self, rhs: Slope) -> Point {
+        Point {
+            x: self.x + rhs.dx,
+            y: self.y + rhs.dy,
         }
     }
 }
 
 struct CoordIter {
-    slope: Coord,
-    curr: Coord,
+    slope: Slope,
+    curr: Point,
     row_len: isize,
     col_len: isize
 }
 
 impl Iterator for CoordIter {
-    type Item = Coord;
+    type Item = Point;
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = self.curr;
@@ -250,6 +192,23 @@ impl Iterator for CoordIter {
         self.curr = self.curr + self.slope;
 
         Some(result)
+    }
+}
+
+fn get_slope(a: Point, b: Point) -> Slope {
+    let rise = b.y - a.y;
+    let run = b.x - a.x;
+    let div = gcd(rise, run);
+    if div == 0 {
+        return Slope {
+            dx: run,
+            dy: rise
+        }
+    }
+
+    Slope {
+        dx: run / div,
+        dy: rise / div
     }
 }
 

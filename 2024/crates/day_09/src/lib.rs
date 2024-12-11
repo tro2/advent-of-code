@@ -171,10 +171,3 @@ impl Fileblock {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    
-}
