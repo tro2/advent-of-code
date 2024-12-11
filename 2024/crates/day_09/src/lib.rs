@@ -1,4 +1,5 @@
-use std::fs::read_to_string;
+use std::{collections::{BTreeMap, BTreeSet}, fs::read_to_string};
+
 
 pub fn part_01(path: &str) -> usize {
     let source = read_to_string(path).unwrap();
@@ -44,6 +45,7 @@ pub fn part_02(path: &str) -> usize {
     let source = read_to_string(path).unwrap();
     let mut id = 0;
     let mut files = Vec::new();
+    let mut store: BTreeMap<usize, BTreeSet<usize>> = BTreeMap::new();
 
     // id the file blocks
     for (idx, ch) in source.chars().enumerate() {
@@ -52,6 +54,15 @@ pub fn part_02(path: &str) -> usize {
             files.extend(std::iter::repeat(FileChunk::new(id, num, files.len())).take(num));
             id += 1;
         } else {
+            if num == 0 {
+                continue;
+            }
+
+            if let Some(set) = store.get_mut(&num) {
+                set.insert(files.len());
+            } else {
+                store.insert(num, BTreeSet::from([files.len()]));
+            }
             files.extend(std::iter::repeat(FileChunk::new(-1, num, files.len())).take(num));
         }
     }
@@ -65,10 +76,28 @@ pub fn part_02(path: &str) -> usize {
 
     while end > 0 {
         let curr = files[end];
+        // println!("id: {}", curr.id);
+        // print_arr(&files);
+        // print_store(&store);
+        // println!();
 
-        let idx = files.iter()
-            .find(|&&chunk| chunk.id == -1 && chunk.size >= curr.size && chunk.start_idx < curr.start_idx)
-            .map(|res| res.start_idx);
+        let max = store.last_key_value().unwrap().0;
+        let idx = if curr.size <= *max {
+            store.range(curr.size..=*max)
+                .filter_map(|(_, set)| {
+                    if let Some(idx) = set.first() {
+                        if *idx > curr.start_idx {
+                            return None;
+                        }
+                        Some(*idx)
+                    } else {
+                        None
+                    }
+                })
+                .min()
+        } else {
+            None
+        };
 
         if let Some(idx) = idx {
             let swap = FileChunk {
@@ -85,6 +114,12 @@ pub fn part_02(path: &str) -> usize {
                     size: space.size - curr.size
                 };
 
+                if let Some(set) = store.get_mut(&new_space.size) {
+                    set.insert(new_space.start_idx);
+                } else {
+                    store.insert(new_space.size, BTreeSet::from([new_space.start_idx]));
+                }
+
                 let comb = std::iter::repeat(swap).take(curr.size)
                     .chain(std::iter::repeat(new_space).take(new_space.size));
 
@@ -92,36 +127,54 @@ pub fn part_02(path: &str) -> usize {
             } else {
                 files.splice(idx..idx + curr.size, std::iter::repeat(swap).take(curr.size));
             }
+
+            store.get_mut(&space.size).unwrap()
+                    .remove(&space.start_idx);
             
             // solidfy space where curr used to exist into 1 continuous empty file
-            let end_space = if files[end - 1].id == -1 {
-                if end < files.len() - 1 && files[end + 1].id == -1 {
-                    FileChunk {
+            let prev = files[end - 1];
+            let next = files.get(end + 1);
+            let (end_space, to_remove) = if prev.id == -1 {
+                if next.is_some() && next.unwrap().id == -1 {
+                    let next = next.unwrap();
+                    (FileChunk {
                         id: -1,
-                        start_idx: files[end - 1].start_idx,
-                        size: files[end - 1].size + curr.size + files[end + 1].size
-                    }
+                        start_idx: prev.start_idx,
+                        size: prev.size + curr.size + next.size
+                    }, vec![prev, *next])
                 } else {
-                    FileChunk {
+                    (FileChunk {
                         id: -1,
-                        start_idx: files[end - 1].start_idx,
-                        size: files[end - 1].size + curr.size
-                    }
+                        start_idx: prev.start_idx,
+                        size: prev.size + curr.size
+                    }, vec![prev])
                 }
-            } else if end < files.len() - 1 && files[end + 1].id == -1 {
-                FileChunk {
-                        id: -1,
-                        start_idx: curr.start_idx,
-                        size: curr.size + files[end + 1].size
-                    }
+            } else if next.is_some() && next.unwrap().id == -1 {
+                let next = next.unwrap();
+                (FileChunk {
+                    id: -1,
+                    start_idx: curr.start_idx,
+                    size: curr.size + next.size
+                }, vec![*next])
             } else {
-                FileChunk {
+                (FileChunk {
                     id: -1,
                     start_idx: curr.start_idx,
                     size: curr.size
-                }
+                }, Vec::new())
             };
 
+            // update empty space map
+            for chunk in to_remove {
+                store.get_mut(&chunk.size).unwrap()
+                    .remove(&chunk.start_idx);
+            }
+
+            if let Some(set) = store.get_mut(&end_space.size) {
+                set.insert(end_space.start_idx);
+            } else {
+                store.insert(end_space.size, BTreeSet::from([end_space.start_idx]));
+            }
             files.splice(end_space.start_idx..end_space.start_idx + end_space.size, std::iter::repeat(end_space).take(end_space.size));
         }
 
@@ -142,7 +195,47 @@ pub fn part_02(path: &str) -> usize {
         .sum()
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[allow(dead_code)]
+fn print_store(store: &BTreeMap<usize, BTreeSet<usize>>) {
+    let mut buffer = String::new();
+
+    buffer.push_str("keys\n");
+    let keys = store.keys()
+        .map(|num| num.to_string())
+        .collect::<Vec<String>>()
+        .join(" ");
+    buffer.push_str(&keys);
+    buffer.push('\n');
+
+    let keys : Vec<usize> = store.keys().copied().collect();
+    for num in &keys {
+        buffer.push_str(&format!("set {}\n", num));
+        let set = store.get(num).unwrap().iter()
+            .map(|num| num.to_string())
+            .collect::<Vec<String>>()
+            .join(" ");
+        buffer.push_str(&set);
+        buffer.push('\n');
+    }
+    println!("{}", buffer);
+}
+
+#[allow(dead_code)]
+fn print_arr(arr: &[FileChunk]) {
+    println!("fileblocks\n{}",
+    arr.iter().map(|chunk| {
+        if chunk.id == -1 {
+            ".".to_string()
+        } else {
+            chunk.id.to_string()
+        }
+    })
+    .collect::<Vec<String>>()
+    .join("")
+    )
+}
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 struct FileChunk {
     id: i32,
     size: usize,
@@ -169,5 +262,18 @@ impl Fileblock {
         Fileblock {
             id
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tree_creation() {
+        let set1 = BTreeSet::from([1]);
+        let set2: BTreeSet<_> = [1].into();
+
+        assert_eq!(set1, set2);
     }
 }
