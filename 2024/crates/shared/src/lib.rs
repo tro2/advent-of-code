@@ -70,6 +70,18 @@ impl Add for Point {
     }
 }
 
+impl Add<Direction> for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Direction) -> Self::Output {
+        let dir = rhs.point();
+        Self::Output {
+            x: self.x + dir.x,
+            y: self.y + dir.y
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 pub enum Direction {
     NORTH,
@@ -83,7 +95,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub const fn to_point(&self) -> Point {
+    pub const fn point(&self) -> Point {
         match self {
             Direction::NORTH => Point { x: 0, y: -1 },
             Direction::SOUTH => Point { x: 0, y: 1 },
@@ -96,7 +108,7 @@ impl Direction {
         }
     }
 
-    pub const fn cw_card_dir(&self) -> Self {
+    pub const fn cw_card(&self) -> Self {
         match self {
             Direction::NORTH => Direction::EAST,
             Direction::EAST => Direction::SOUTH,
@@ -109,7 +121,20 @@ impl Direction {
         }
     }
 
-    pub const fn ccw_card_dir(&self) -> Self {
+    pub const fn rev(&self) -> Self {
+        match self {
+            Direction::NORTH => Direction::SOUTH,
+            Direction::SOUTH => Direction::NORTH,
+            Direction::EAST => Direction::WEST,
+            Direction::WEST => Direction::EAST,
+            Direction::NORTHEAST => Direction::SOUTHWEST,
+            Direction::NORTHWEST => Direction::SOUTHEAST,
+            Direction::SOUTHEAST => Direction::NORTHWEST,
+            Direction::SOUTHWEST => Direction::NORTHEAST,
+        }
+    }
+
+    pub const fn ccw_card(&self) -> Self {
         match self {
             Direction::NORTH => Direction::WEST,
             Direction::WEST => Direction::SOUTH,
@@ -132,21 +157,21 @@ impl Direction {
     // pub const SOUTHWEST: Point = Point { x: -1,y:  1 };
 
     pub const CARDINALS: [Point; 4] = [
-        Direction::NORTH.to_point(),
-        Direction::SOUTH.to_point(),
-        Direction::EAST.to_point(),
-        Direction::WEST.to_point(),
+        Direction::NORTH.point(),
+        Direction::SOUTH.point(),
+        Direction::EAST.point(),
+        Direction::WEST.point(),
     ];
 
     pub const ALL: [Point; 8] = [
-        Direction::NORTH.to_point(),
-        Direction::SOUTH.to_point(),
-        Direction::EAST.to_point(),
-        Direction::WEST.to_point(),
-        Direction::NORTHEAST.to_point(),
-        Direction::NORTHWEST.to_point(),
-        Direction::SOUTHEAST.to_point(),
-        Direction::SOUTHWEST.to_point(),
+        Direction::NORTH.point(),
+        Direction::SOUTH.point(),
+        Direction::EAST.point(),
+        Direction::WEST.point(),
+        Direction::NORTHEAST.point(),
+        Direction::NORTHWEST.point(),
+        Direction::SOUTHEAST.point(),
+        Direction::SOUTHWEST.point(),
     ];
 }
 

@@ -113,6 +113,13 @@ struct Garden<'a> {
 }
 
 impl Garden<'_> {
+    fn at(&self, coord: Point) -> Option<u8> {
+        if let Some(idx) = self.grid.coord_to_idx(coord) {
+            return Some(self.grid.data[idx]);
+        }
+        None
+    }
+
     fn check_surroundings(&mut self, idx: usize, key: u8) -> Vec<usize> {
         let pos = self.grid.idx_to_coords(idx);
         Direction::CARDINALS.iter()
@@ -130,7 +137,7 @@ impl Garden<'_> {
 
     fn traverse_fence(&self, corner: usize) -> usize {
         let key = self.grid.data[corner];
-        let start = self.grid.idx_to_coords(corner) + Direction::NORTH.to_point();
+        let start = self.grid.idx_to_coords(corner) + Direction::NORTH;
         
         let mut pos = start;
         let mut sides = 0;
@@ -140,7 +147,7 @@ impl Garden<'_> {
             let (next_dir, side_count) = self.path_blocked_cw(pos, curr_dir, key);
             sides += side_count;
             curr_dir = next_dir;
-            pos = pos + next_dir.to_point();
+            pos = pos + next_dir;
 
             if pos == start {
                 break;
@@ -153,7 +160,7 @@ impl Garden<'_> {
     #[cfg(test)]
     fn traverse_fence_dbg(&self, corner: usize) -> (usize, Vec<usize>, Vec<Direction>, Vec<Point>) {
         let key = self.grid.data[corner];
-        let start = self.grid.idx_to_coords(corner) + Direction::NORTH.to_point();
+        let start = self.grid.idx_to_coords(corner) + Direction::NORTH;
         
         let mut pos = start;
         let mut sides = 0;
@@ -168,7 +175,7 @@ impl Garden<'_> {
             dirs.push(next_dir);
             sides += side_count;
             curr_dir = next_dir;
-            pos = pos + next_dir.to_point();
+            pos = pos + next_dir;
             positions.push(pos);
 
             if pos == start {
@@ -180,43 +187,50 @@ impl Garden<'_> {
     }
 
     fn path_blocked_cw(&self, pos: Point, dir: Direction, key: u8) -> (Direction, usize) {
-        let next = pos + dir.cw_card_dir().to_point();
-        if let Some(idx) = self.grid.coord_to_idx(next) {
-            if self.grid.data[idx] != key {
-                return (dir.cw_card_dir(), 1);
-            } else {
-                let next = pos + dir.to_point();
-                if let Some(idx) = self.grid.coord_to_idx(next) {
-                    if self.grid.data[idx] != key {
-                        return (dir, 0);
-                    } else {
-                        let next = pos + dir.ccw_card_dir().to_point(); 
-                        if let Some(idx) = self.grid.coord_to_idx(next) {
-                            if self.grid.data[idx] != key {
-                                return (dir.ccw_card_dir(), 1);
-                            } else {
-                                return (dir.cw_card_dir().cw_card_dir(), 2)
-                            }
-                        } else {
-                            return (dir.ccw_card_dir(), 1);
-                        }
-                    }
-                } else {
-                    return (dir, 0);
-                }
-            }
-        } else {
-            return (dir.cw_card_dir(), 1);
+        let result = self.at(pos + dir.cw_card());
+        if result.is_none() || result.unwrap() != key {
+            return (dir.cw_card(), 1);
         }
+
+        let result = self.at(pos + dir);
+        if result.is_none() || result.unwrap() != key {
+            return (dir, 0);
+        }
+
+        let result = self.at(pos + dir.ccw_card());
+        if result.is_none() || result.unwrap() != key {
+            return (dir.ccw_card(), 1);
+        }
+
+        (dir.rev(), 2)
     }
 
 
     fn path_inside_blocked_cw(&self, pos: Point, dir: Direction) -> (Direction, usize) {
-        (Direction::NORTH, 0)
+        let key = self.at(pos).unwrap();
+        if let Some(byte) = self.at(pos + dir.ccw_card()) {
+            if byte == key {
+                return (dir.ccw_card(), 1);
+            }
+        }
+
+        if let Some(byte) = self.at(pos + dir) {
+            if byte == key {
+                return (dir, 0);
+            }
+        }
+
+        let key = self.at(pos).unwrap();
+        if let Some(byte) = self.at(pos + dir.cw_card()) {
+            if byte == key {
+                return (dir.cw_card(), 1);
+            }
+        }
+
+        (dir.rev(), 2)
     }
 
     fn traverse_inside(&self, corner: usize) -> (usize, Vec<u8>) {
-        let key = self.grid.data[corner];
         let start = self.grid.idx_to_coords(corner);
         
         let mut pos = start;
@@ -228,7 +242,7 @@ impl Garden<'_> {
             let (next_dir, side_count) = self.path_inside_blocked_cw(pos, curr_dir);
             sides += side_count;
             curr_dir = next_dir;
-            pos = pos + next_dir.to_point();
+            pos = pos + next_dir.point();
 
             if pos == start {
                 break;
