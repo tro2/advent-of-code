@@ -12,5 +12,5 @@ fn d14_p1_input() {
 
 #[test]
 fn d14_p2_input() {
-    assert_eq!(day_14::part_02("tests/input.txt"), 0) // always succeeds, generates output.txt
+    assert_eq!(day_14::part_02("tests/input.txt"), 6644)
 }

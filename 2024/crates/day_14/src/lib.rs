@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs::{read_to_string, File}, io::{BufWriter, Write}, ops::{Index, IndexMut}};
+use std::fs::read_to_string;
 use shared::Point;
 
 pub fn part_01(path: &str) -> isize {
@@ -29,10 +29,6 @@ pub fn part_02(path: &str) -> isize {
 
     let (width, height, mut robots) = parse_data(&source);
 
-    let template = (".".repeat(width as usize) + "\n").repeat(height as usize);
-    let file = File::create("output.txt").unwrap();
-    let mut writer = BufWriter::new(file);
-
     for i in 1..=10_000 {
         robots.iter_mut().for_each(|robot| {
             let temp = robot.pos + robot.velocity;
@@ -41,21 +37,29 @@ pub fn part_02(path: &str) -> isize {
                 temp.y % height
             )
         });
-        
-        let mut copy = template.to_owned().as_bytes().to_owned();
 
+        let mut grid = vec![vec![false; width as usize]; height as usize];
+
+        // Mark the positions of the robots in the grid
         for robot in &robots {
-            // translate position to idx
-            let idx = (robot.pos.y * (width + 1) + robot.pos.x) as usize;
-            copy[idx] = b'#';
+            grid[robot.pos.y as usize][robot.pos.x as usize] = true;
         }
-        
-        writer.write(format!("{}\n", i).as_bytes()).unwrap();
-        writer.write(&copy).unwrap();
-        
-    }
 
-    writer.flush().unwrap();
+        // Check each row for a contiguous sequence of robots
+        for row in &grid {
+            let mut count = 0;
+            for &cell in row {
+                if cell {
+                    count += 1;
+                    if count >= 8 {
+                        return i;
+                    }
+                } else {
+                    count = 0;
+                }
+            }
+        }
+    }
 
     0
 }
