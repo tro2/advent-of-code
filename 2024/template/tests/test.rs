@@ -1,21 +1,37 @@
-use day_00;
+use std::fs::read_to_string;
 
 #[test]
-fn d0_p1_example() {
-    assert_eq!(day_00::part_01("tests/example.txt"), 3749)
+fn d3_p1_example() {
+    let input = read_to_string("tests/example.txt").expect("Failed to read input file");
+
+    let res = day_00::part_01(&input).unwrap_or_else(|e| panic!("part_01 failed: {e}"));
+
+    assert_eq!(res, 0);
 }
 
 #[test]
-fn d0_p1_input() {
-    assert_eq!(day_00::part_01("tests/input.txt"), 5208)
+fn d3_p1_input() {
+    let input = read_to_string("tests/input.txt").expect("Failed to read input file");
+
+    let res = day_00::part_01(&input).unwrap_or_else(|e| panic!("part_01 failed: {e}"));
+
+    assert_eq!(res, 0);
 }
 
 #[test]
-fn d0_p2_example() {
-    assert_eq!(day_00::part_02("tests/example.txt"), 6)
+fn d3_p2_example() {
+    let input = read_to_string("tests/ex_p2.txt").expect("Failed to read input file");
+
+    let res = day_00::part_02(&input).unwrap_or_else(|e| panic!("part_02 failed: {e}"));
+
+    assert_eq!(res, 0);
 }
 
 #[test]
-fn d0_p2_input() {
-    assert_eq!(day_00::part_02("tests/input.txt"), 1972)
+fn d3_p2_input() {
+    let input = read_to_string("tests/input.txt").expect("Failed to read input file");
+
+    let res = day_00::part_02(&input).unwrap_or_else(|e| panic!("part_02 failed: {e}"));
+
+    assert_eq!(res, 0);
 }
