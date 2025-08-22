@@ -88,7 +88,7 @@ struct Grid<'a> {
 }
 
 impl Grid<'_> {
-    fn iter(&self) -> GridIter {
+    fn iter(&'_ self) -> GridIter<'_> {
         let x = self.idx % self.row_len;
         let y = self.idx / self.row_len;
         GridIter {
