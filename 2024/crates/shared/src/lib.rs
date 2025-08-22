@@ -3,35 +3,32 @@ use std::{error::Error, fmt, ops::Add};
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 pub struct Point {
     pub x: isize,
-    pub y: isize
+    pub y: isize,
 }
 
 impl Point {
     pub fn from_u(x: usize, y: usize) -> Self {
         Self {
             x: x as isize,
-            y: y as isize
+            y: y as isize,
         }
     }
 
     pub fn new(x: isize, y: isize) -> Self {
-        Self {
-            x,
-            y
-        }
+        Self { x, y }
     }
 
     pub fn euclid_dist(&self, b: Self) -> Self {
         Self {
             x: (b.x - self.x).abs(),
-            y: (b.y - self.y).abs()
+            y: (b.y - self.y).abs(),
         }
     }
 
     pub fn scale_by(&self, factor: isize) -> Self {
         Self {
             x: self.x * factor,
-            y: self.y * factor
+            y: self.y * factor,
         }
     }
 
@@ -50,8 +47,7 @@ pub trait Grid2D {
 
     fn coord_to_idx(&self, coord: Point) -> Option<usize> {
         let (x, y) = coord.components();
-        if (0..self.row_len() as isize).contains(&x) &&
-           (0..self.col_len() as isize).contains(&y) {
+        if (0..self.row_len() as isize).contains(&x) && (0..self.col_len() as isize).contains(&y) {
             Some((y * self.row_len() as isize + x) as usize)
         } else {
             None
@@ -65,7 +61,7 @@ impl Add for Point {
     fn add(self, rhs: Self) -> Self::Output {
         Self::Output {
             x: self.x + rhs.x,
-            y: self.y + rhs.y
+            y: self.y + rhs.y,
         }
     }
 }
@@ -77,7 +73,7 @@ impl Add<Direction> for Point {
         let dir = rhs.point();
         Self::Output {
             x: self.x + dir.x,
-            y: self.y + dir.y
+            y: self.y + dir.y,
         }
     }
 }
@@ -100,11 +96,11 @@ impl Direction {
             Direction::NORTH => Point { x: 0, y: -1 },
             Direction::SOUTH => Point { x: 0, y: 1 },
             Direction::EAST => Point { x: 1, y: 0 },
-            Direction::WEST => Point { x: -1,y:  0 },
+            Direction::WEST => Point { x: -1, y: 0 },
             Direction::NORTHEAST => Point { x: 1, y: -1 },
-            Direction::NORTHWEST => Point { x: -1,y: -1 },
+            Direction::NORTHWEST => Point { x: -1, y: -1 },
             Direction::SOUTHEAST => Point { x: 1, y: 1 },
-            Direction::SOUTHWEST => Point { x: -1,y:  1 },
+            Direction::SOUTHWEST => Point { x: -1, y: 1 },
         }
     }
 
@@ -177,7 +173,7 @@ impl Direction {
 
 #[derive(Debug)]
 pub struct GridError {
-    kind: GridErrorType
+    kind: GridErrorType,
 }
 
 #[derive(Debug)]
@@ -213,27 +209,23 @@ impl<'a> TryFrom<&'a str> for DefaultGrid<'a> {
     fn try_from(s: &'a str) -> Result<Self, GridError> {
         let n_pos = s.find('\n');
         if n_pos.is_none() {
-            return Err(
-                GridError {
-                    kind: GridErrorType::NoRows
-                }
-            )
+            return Err(GridError {
+                kind: GridErrorType::NoRows,
+            });
         }
         let row_len = n_pos.unwrap() + 1;
 
         if s.len() % row_len != 0 {
-            return Err(
-                GridError {
-                    kind: GridErrorType::NotSquare
-                }
-            )
+            return Err(GridError {
+                kind: GridErrorType::NotSquare,
+            });
         }
         let col_len = s.len() / row_len;
-        
+
         Ok(DefaultGrid {
             data: s.as_bytes(),
             row_len,
-            col_len
+            col_len,
         })
     }
 }

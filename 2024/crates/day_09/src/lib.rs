@@ -1,5 +1,7 @@
-use std::{collections::{BTreeMap, BTreeSet}, fs::read_to_string};
-
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs::read_to_string,
+};
 
 pub fn part_01(path: &str) -> usize {
     let source = read_to_string(path).unwrap();
@@ -19,16 +21,15 @@ pub fn part_01(path: &str) -> usize {
 
     // reorder to compress file blocks
 
-    let mut front = strbuf.iter()
-        .position(|&c| c.id == -1)
-        .unwrap();
+    let mut front = strbuf.iter().position(|&c| c.id == -1).unwrap();
 
     let mut end = strbuf.len() - 1;
     while front < end {
         if strbuf[end].id != -1 {
-            strbuf.swap(front,end);
+            strbuf.swap(front, end);
 
-            front += 1 + strbuf.iter()
+            front += 1 + strbuf
+                .iter()
                 .skip(front + 1) // Start iterating from the next index
                 .position(|c| c.id == -1)
                 .unwrap();
@@ -36,7 +37,9 @@ pub fn part_01(path: &str) -> usize {
         end -= 1;
     }
 
-    strbuf[0..front].iter().enumerate()
+    strbuf[0..front]
+        .iter()
+        .enumerate()
         .map(|(idx, fileblock)| idx * fileblock.id as usize)
         .sum()
 }
@@ -69,10 +72,7 @@ pub fn part_02(path: &str) -> usize {
 
     // reorder to compress file blocks
 
-    let mut end = files.iter().rev()
-        .find(|c| c.id != -1)
-        .unwrap()
-        .start_idx;
+    let mut end = files.iter().rev().find(|c| c.id != -1).unwrap().start_idx;
 
     while end > 0 {
         let curr = files[end];
@@ -83,7 +83,8 @@ pub fn part_02(path: &str) -> usize {
 
         let max = store.last_key_value().unwrap().0;
         let idx = if curr.size <= *max {
-            store.range(curr.size..=*max)
+            store
+                .range(curr.size..=*max)
                 .filter_map(|(_, set)| {
                     if let Some(idx) = set.first() {
                         if *idx > curr.start_idx {
@@ -101,7 +102,7 @@ pub fn part_02(path: &str) -> usize {
 
         if let Some(idx) = idx {
             let swap = FileChunk {
-                start_idx:idx,
+                start_idx: idx,
                 ..curr
             };
 
@@ -111,7 +112,7 @@ pub fn part_02(path: &str) -> usize {
                 let new_space = FileChunk {
                     id: -1,
                     start_idx: idx + curr.size,
-                    size: space.size - curr.size
+                    size: space.size - curr.size,
                 };
 
                 if let Some(set) = store.get_mut(&new_space.size) {
@@ -120,54 +121,68 @@ pub fn part_02(path: &str) -> usize {
                     store.insert(new_space.size, BTreeSet::from([new_space.start_idx]));
                 }
 
-                let comb = std::iter::repeat(swap).take(curr.size)
+                let comb = std::iter::repeat(swap)
+                    .take(curr.size)
                     .chain(std::iter::repeat(new_space).take(new_space.size));
 
                 files.splice(idx..idx + curr.size + new_space.size, comb);
             } else {
-                files.splice(idx..idx + curr.size, std::iter::repeat(swap).take(curr.size));
+                files.splice(
+                    idx..idx + curr.size,
+                    std::iter::repeat(swap).take(curr.size),
+                );
             }
 
-            store.get_mut(&space.size).unwrap()
-                    .remove(&space.start_idx);
-            
+            store.get_mut(&space.size).unwrap().remove(&space.start_idx);
+
             // solidfy space where curr used to exist into 1 continuous empty file
             let prev = files[end - 1];
             let next = files.get(end + 1);
             let (end_space, to_remove) = if prev.id == -1 {
                 if next.is_some() && next.unwrap().id == -1 {
                     let next = next.unwrap();
-                    (FileChunk {
-                        id: -1,
-                        start_idx: prev.start_idx,
-                        size: prev.size + curr.size + next.size
-                    }, vec![prev, *next])
+                    (
+                        FileChunk {
+                            id: -1,
+                            start_idx: prev.start_idx,
+                            size: prev.size + curr.size + next.size,
+                        },
+                        vec![prev, *next],
+                    )
                 } else {
-                    (FileChunk {
-                        id: -1,
-                        start_idx: prev.start_idx,
-                        size: prev.size + curr.size
-                    }, vec![prev])
+                    (
+                        FileChunk {
+                            id: -1,
+                            start_idx: prev.start_idx,
+                            size: prev.size + curr.size,
+                        },
+                        vec![prev],
+                    )
                 }
             } else if next.is_some() && next.unwrap().id == -1 {
                 let next = next.unwrap();
-                (FileChunk {
-                    id: -1,
-                    start_idx: curr.start_idx,
-                    size: curr.size + next.size
-                }, vec![*next])
+                (
+                    FileChunk {
+                        id: -1,
+                        start_idx: curr.start_idx,
+                        size: curr.size + next.size,
+                    },
+                    vec![*next],
+                )
             } else {
-                (FileChunk {
-                    id: -1,
-                    start_idx: curr.start_idx,
-                    size: curr.size
-                }, Vec::new())
+                (
+                    FileChunk {
+                        id: -1,
+                        start_idx: curr.start_idx,
+                        size: curr.size,
+                    },
+                    Vec::new(),
+                )
             };
 
             // update empty space map
             for chunk in to_remove {
-                store.get_mut(&chunk.size).unwrap()
-                    .remove(&chunk.start_idx);
+                store.get_mut(&chunk.size).unwrap().remove(&chunk.start_idx);
             }
 
             if let Some(set) = store.get_mut(&end_space.size) {
@@ -175,16 +190,23 @@ pub fn part_02(path: &str) -> usize {
             } else {
                 store.insert(end_space.size, BTreeSet::from([end_space.start_idx]));
             }
-            files.splice(end_space.start_idx..end_space.start_idx + end_space.size, std::iter::repeat(end_space).take(end_space.size));
+            files.splice(
+                end_space.start_idx..end_space.start_idx + end_space.size,
+                std::iter::repeat(end_space).take(end_space.size),
+            );
         }
 
-        end = files[0..end].iter().rev()
+        end = files[0..end]
+            .iter()
+            .rev()
             .find(|c| c.id != -1)
             .map(|c| c.start_idx)
             .unwrap_or(0);
     }
 
-    files.iter().enumerate()
+    files
+        .iter()
+        .enumerate()
         .map(|(idx, fileblock)| {
             if fileblock.id == -1 {
                 0
@@ -200,17 +222,21 @@ fn print_store(store: &BTreeMap<usize, BTreeSet<usize>>) {
     let mut buffer = String::new();
 
     buffer.push_str("keys\n");
-    let keys = store.keys()
+    let keys = store
+        .keys()
         .map(|num| num.to_string())
         .collect::<Vec<String>>()
         .join(" ");
     buffer.push_str(&keys);
     buffer.push('\n');
 
-    let keys : Vec<usize> = store.keys().copied().collect();
+    let keys: Vec<usize> = store.keys().copied().collect();
     for num in &keys {
         buffer.push_str(&format!("set {}\n", num));
-        let set = store.get(num).unwrap().iter()
+        let set = store
+            .get(num)
+            .unwrap()
+            .iter()
             .map(|num| num.to_string())
             .collect::<Vec<String>>()
             .join(" ");
@@ -222,16 +248,18 @@ fn print_store(store: &BTreeMap<usize, BTreeSet<usize>>) {
 
 #[allow(dead_code)]
 fn print_arr(arr: &[FileChunk]) {
-    println!("fileblocks\n{}",
-    arr.iter().map(|chunk| {
-        if chunk.id == -1 {
-            ".".to_string()
-        } else {
-            chunk.id.to_string()
-        }
-    })
-    .collect::<Vec<String>>()
-    .join("")
+    println!(
+        "fileblocks\n{}",
+        arr.iter()
+            .map(|chunk| {
+                if chunk.id == -1 {
+                    ".".to_string()
+                } else {
+                    chunk.id.to_string()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("")
     )
 }
 
@@ -239,7 +267,7 @@ fn print_arr(arr: &[FileChunk]) {
 struct FileChunk {
     id: i32,
     size: usize,
-    start_idx: usize
+    start_idx: usize,
 }
 
 impl FileChunk {
@@ -247,21 +275,19 @@ impl FileChunk {
         Self {
             id,
             size,
-            start_idx
+            start_idx,
         }
     }
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 struct Fileblock {
-    id: i32
+    id: i32,
 }
 
 impl Fileblock {
     fn new(id: i32) -> Self {
-        Fileblock {
-            id
-        }
+        Fileblock { id }
     }
 }
 

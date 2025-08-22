@@ -1,5 +1,9 @@
-use std::{collections::{HashMap, HashSet}, fs::read_to_string, ops::Add};
 use shared::Point;
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+    ops::Add,
+};
 
 pub fn part_01(path: &str) -> u32 {
     let source = read_to_string(path).unwrap();
@@ -24,10 +28,11 @@ pub fn part_01(path: &str) -> u32 {
         }
     }
 
-    for (_/*byte*/, positions) in antennaes.iter() {
+    for (_ /*byte*/, positions) in antennaes.iter() {
         for i in 0..positions.len() - 1 {
             for j in i + 1..positions.len() {
-                let antinode_pos = gen_positions(positions[i], positions[j], row_len, col_len, false);
+                let antinode_pos =
+                    gen_positions(positions[i], positions[j], row_len, col_len, false);
                 for pos in antinode_pos.iter() {
                     antinodes.insert(*pos);
                 }
@@ -38,9 +43,9 @@ pub fn part_01(path: &str) -> u32 {
                 //         print!("{}", ch);
                 //         continue;
                 //     }
-            
+
                 //     let pos = Coord::new(idx % row_len, idx / row_len);
-            
+
                 //     if antinode_pos.contains(&pos) {
                 //         print!("{}", '#');
                 //     } else if pos == positions[i] || pos == positions[j] {
@@ -100,7 +105,8 @@ pub fn part_02(path: &str) -> u32 {
     for (_, positions) in antennaes.iter() {
         for i in 0..positions.len() - 1 {
             for j in i + 1..positions.len() {
-                let antinode_pos = gen_positions(positions[i], positions[j], row_len, col_len, true);
+                let antinode_pos =
+                    gen_positions(positions[i], positions[j], row_len, col_len, true);
                 for pos in antinode_pos.iter() {
                     antinodes.insert(*pos);
                 }
@@ -111,13 +117,19 @@ pub fn part_02(path: &str) -> u32 {
     antinodes.len() as u32
 }
 
-fn gen_positions(a: Point, b: Point, row_len: usize, col_len: usize, skip_check: bool) -> Vec<Point> {
+fn gen_positions(
+    a: Point,
+    b: Point,
+    row_len: usize,
+    col_len: usize,
+    skip_check: bool,
+) -> Vec<Point> {
     let mut positions = Vec::new();
     let slope = get_slope(a, b);
 
     fn check(pos: Point, a: Point, b: Point) -> bool {
-        pos.euclid_dist(a) == pos.euclid_dist(b).scale_by(2) ||
-        pos.euclid_dist(b) == pos.euclid_dist(a).scale_by(2)
+        pos.euclid_dist(a) == pos.euclid_dist(b).scale_by(2)
+            || pos.euclid_dist(b) == pos.euclid_dist(a).scale_by(2)
     }
 
     for pos in slope.iter(a, row_len, col_len) {
@@ -135,19 +147,17 @@ fn gen_positions(a: Point, b: Point, row_len: usize, col_len: usize, skip_check:
     positions
 }
 
-
-
 #[derive(PartialEq, Eq, Copy, Clone)]
 struct Slope {
     dx: isize,
-    dy: isize
+    dy: isize,
 }
 
 impl Slope {
     fn rev_dir(&self) -> Self {
         Self {
             dx: -self.dx,
-            dy: -self.dy
+            dy: -self.dy,
         }
     }
 
@@ -156,7 +166,7 @@ impl Slope {
             curr: start,
             slope: *self,
             row_len: row_len as isize,
-            col_len: col_len as isize
+            col_len: col_len as isize,
         }
     }
 }
@@ -176,7 +186,7 @@ struct CoordIter {
     slope: Slope,
     curr: Point,
     row_len: isize,
-    col_len: isize
+    col_len: isize,
 }
 
 impl Iterator for CoordIter {
@@ -184,8 +194,7 @@ impl Iterator for CoordIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = self.curr;
-        if !(0..self.row_len - 1).contains(&result.x)
-        || !(0..self.col_len).contains(&result.y) {
+        if !(0..self.row_len - 1).contains(&result.x) || !(0..self.col_len).contains(&result.y) {
             return None;
         }
 
@@ -200,15 +209,12 @@ fn get_slope(a: Point, b: Point) -> Slope {
     let run = b.x - a.x;
     let div = gcd(rise, run);
     if div == 0 {
-        return Slope {
-            dx: run,
-            dy: rise
-        }
+        return Slope { dx: run, dy: rise };
     }
 
     Slope {
         dx: run / div,
-        dy: rise / div
+        dy: rise / div,
     }
 }
 

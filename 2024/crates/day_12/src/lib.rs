@@ -1,4 +1,7 @@
-use std::{collections::{HashMap, HashSet}, fs::read_to_string};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+};
 
 use shared::{DefaultGrid, Direction, Grid2D, Point};
 
@@ -8,9 +11,9 @@ pub fn part_01(path: &str) -> usize {
     let mut garden = Garden {
         grid: DefaultGrid::try_from(source.as_str()).unwrap(),
         idx_to_plot: HashMap::new(),
-        curr_plot_id: 0
+        curr_plot_id: 0,
     };
-    
+
     let mut sum = 0;
 
     for (idx, byte) in garden.grid.data.iter().enumerate() {
@@ -55,10 +58,10 @@ pub fn part_02(path: &str) -> usize {
         garden: Garden {
             grid: DefaultGrid::try_from(source.as_str()).unwrap(),
             idx_to_plot: HashMap::new(),
-            curr_plot_id: 0
+            curr_plot_id: 0,
         },
         plot_to_idxs: HashMap::new(),
-        plot_to_info: HashMap::new()
+        plot_to_info: HashMap::new(),
     };
 
     for (idx, byte) in m.garden.grid.data.iter().enumerate() {
@@ -67,7 +70,8 @@ pub fn part_02(path: &str) -> usize {
         }
 
         m.garden.idx_to_plot.insert(idx, m.garden.curr_plot_id);
-        m.plot_to_idxs.insert(m.garden.curr_plot_id, HashSet::from([idx]));
+        m.plot_to_idxs
+            .insert(m.garden.curr_plot_id, HashSet::from([idx]));
         let mut area = 0;
         let mut num_sides = 0;
         let mut queue = Vec::new();
@@ -83,26 +87,31 @@ pub fn part_02(path: &str) -> usize {
                 if !m.garden.idx_to_plot.contains_key(&i) {
                     // new point on plot found
                     m.garden.idx_to_plot.insert(i, m.garden.curr_plot_id);
-                    m.plot_to_idxs.get_mut(&m.garden.curr_plot_id).unwrap().insert(i);
+                    m.plot_to_idxs
+                        .get_mut(&m.garden.curr_plot_id)
+                        .unwrap()
+                        .insert(i);
                     queue.push(i);
                 }
             }
         }
 
         num_sides += m.garden.traverse_fence(idx);
-        
-        m.plot_to_info.insert(m.garden.curr_plot_id, GardenInfo {
-            area,
-            side_count: num_sides
-        });
+
+        m.plot_to_info.insert(
+            m.garden.curr_plot_id,
+            GardenInfo {
+                area,
+                side_count: num_sides,
+            },
+        );
 
         m.garden.curr_plot_id += 1;
     }
 
-    m.plot_to_info.iter()
-        .map(|(_, &info)| {
-            info.area * info.side_count
-        })
+    m.plot_to_info
+        .iter()
+        .map(|(_, &info)| info.area * info.side_count)
         .sum()
 }
 
@@ -122,12 +131,13 @@ impl Garden<'_> {
 
     fn check_surroundings(&mut self, idx: usize, key: u8) -> Vec<usize> {
         let pos = self.grid.idx_to_coords(idx);
-        Direction::CARDINALS.iter()
+        Direction::CARDINALS
+            .iter()
             .filter_map(|&offset| {
                 let coord = pos + offset;
                 if let Some(curr) = self.grid.coord_to_idx(coord) {
                     if self.grid.data[curr] == key {
-                        return Some(curr)
+                        return Some(curr);
                     }
                 }
                 None
@@ -138,7 +148,7 @@ impl Garden<'_> {
     fn traverse_fence(&self, corner: usize) -> usize {
         let key = self.grid.data[corner];
         let start = self.grid.idx_to_coords(corner) + Direction::NORTH;
-        
+
         let mut pos = start;
         let mut sides = 0;
         let mut curr_dir = Direction::EAST;
@@ -161,7 +171,7 @@ impl Garden<'_> {
     fn traverse_fence_dbg(&self, corner: usize) -> (usize, Vec<usize>, Vec<Direction>, Vec<Point>) {
         let key = self.grid.data[corner];
         let start = self.grid.idx_to_coords(corner) + Direction::NORTH;
-        
+
         let mut pos = start;
         let mut sides = 0;
         let mut curr_dir = Direction::EAST;
@@ -205,7 +215,6 @@ impl Garden<'_> {
         (dir.rev(), 2)
     }
 
-
     fn path_inside_blocked_cw(&self, pos: Point, dir: Direction) -> (Direction, usize) {
         let key = self.at(pos).unwrap();
         if let Some(byte) = self.at(pos + dir.ccw_card()) {
@@ -232,7 +241,7 @@ impl Garden<'_> {
 
     fn traverse_inside(&self, corner: usize) -> (usize, Vec<u8>) {
         let start = self.grid.idx_to_coords(corner);
-        
+
         let mut pos = start;
         let mut sides = 0;
         let mut curr_dir = Direction::EAST;
@@ -275,17 +284,17 @@ mod tests {
         let garden = Garden {
             grid: DefaultGrid::try_from(source).unwrap(),
             idx_to_plot: HashMap::new(),
-            curr_plot_id: 0
+            curr_plot_id: 0,
         };
 
         let (out_dir, side_count) =
-            garden.path_blocked_cw(Point::new(0,-1), Direction::EAST, b'A');
+            garden.path_blocked_cw(Point::new(0, -1), Direction::EAST, b'A');
 
         assert_eq!(out_dir, Direction::EAST);
         assert_eq!(side_count, 0);
 
         let (out_dir, side_count) =
-            garden.path_blocked_cw(Point::new(3,-1), Direction::EAST, b'A');
+            garden.path_blocked_cw(Point::new(3, -1), Direction::EAST, b'A');
 
         assert_eq!(out_dir, Direction::EAST);
         assert_eq!(side_count, 0);
@@ -297,11 +306,11 @@ mod tests {
         let garden = Garden {
             grid: DefaultGrid::try_from(source).unwrap(),
             idx_to_plot: HashMap::new(),
-            curr_plot_id: 0
+            curr_plot_id: 0,
         };
 
         let (out_dir, side_count) =
-            garden.path_blocked_cw(Point::new(4,-1), Direction::EAST, b'A');
+            garden.path_blocked_cw(Point::new(4, -1), Direction::EAST, b'A');
 
         assert_eq!(out_dir, Direction::SOUTH);
         assert_eq!(side_count, 1);
@@ -312,8 +321,8 @@ mod tests {
         let source = "AAAA\n";
         let garden = Garden {
             grid: DefaultGrid::try_from(source).unwrap(),
-            idx_to_plot: HashMap::from([(0, 0), (1,0), (3,0), (4,0)]),
-            curr_plot_id: 0
+            idx_to_plot: HashMap::from([(0, 0), (1, 0), (3, 0), (4, 0)]),
+            curr_plot_id: 0,
         };
 
         let traverse = garden.traverse_fence(0);
@@ -326,16 +335,16 @@ mod tests {
         let source = "AABA\nBAAA\n";
         // AABA
         // BAAA
-        let zero = [0_usize,1,3,6,7,8].iter().map(|&idx| (idx, 0_u32));
+        let zero = [0_usize, 1, 3, 6, 7, 8].iter().map(|&idx| (idx, 0_u32));
         let one = [2].iter().map(|&idx| (idx, 1));
         let two = [5].iter().map(|&idx| (idx, 2));
         let garden = Garden {
             grid: DefaultGrid::try_from(source).unwrap(),
             idx_to_plot: zero.chain(one).chain(two).collect(),
-            curr_plot_id: 0
+            curr_plot_id: 0,
         };
 
-        let expected_counts = vec![0,0,1,2,1,0,1,0,0,1,0,0,0,1,1,1,0,1];
+        let expected_counts = vec![0, 0, 1, 2, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1];
         let expected_dirs = vec![
             Direction::EAST,
             Direction::EAST,
@@ -354,7 +363,7 @@ mod tests {
             Direction::WEST,
             Direction::NORTH,
             Direction::NORTH,
-            Direction::EAST
+            Direction::EAST,
         ];
         let expected_pos = vec![
             Point::new(0, -1),
@@ -375,7 +384,7 @@ mod tests {
             Point::new(-1, 1),
             Point::new(-1, 0),
             Point::new(-1, -1),
-            Point::new(0, -1)
+            Point::new(0, -1),
         ];
 
         let (sides, counts, dirs, pos) = garden.traverse_fence_dbg(0);
@@ -395,15 +404,14 @@ mod tests {
         // ABBAAA
         // ABBAAA
         // AAAAAA
-        let zero =
-            [0_usize,1,3,6,7,8].iter().map(|&idx| (idx, 0_u32));
-        let one = [11,12,19,20].iter().map(|&idx| (idx, 1));
-        let two = [25,26,33,34].iter().map(|&idx| (idx, 2));
+        let zero = [0_usize, 1, 3, 6, 7, 8].iter().map(|&idx| (idx, 0_u32));
+        let one = [11, 12, 19, 20].iter().map(|&idx| (idx, 1));
+        let two = [25, 26, 33, 34].iter().map(|&idx| (idx, 2));
 
         let garden = Garden {
             grid: DefaultGrid::try_from(source).unwrap(),
             idx_to_plot: zero.chain(one).chain(two).collect(),
-            curr_plot_id: 0
+            curr_plot_id: 0,
         };
 
         let output = garden.traverse_fence_dbg(0);

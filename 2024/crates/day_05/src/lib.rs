@@ -1,13 +1,14 @@
-use std::{fs::read_to_string, ops::Div};
 use petgraph::algo::toposort;
 use petgraph::prelude::*;
+use std::{fs::read_to_string, ops::Div};
 
 pub fn part_01(path: &str) -> u32 {
     let source = read_to_string(path).unwrap();
 
     let (rules, updates) = source.split_once("\n\n").unwrap();
 
-    let rules: Vec<(u32, u32)> = rules.lines()
+    let rules: Vec<(u32, u32)> = rules
+        .lines()
         .map(|line| {
             let (a, b) = line.split_once('|').unwrap();
             (a.parse().unwrap(), b.parse().unwrap())
@@ -16,20 +17,13 @@ pub fn part_01(path: &str) -> u32 {
 
     let updates: Vec<Vec<u32>> = updates
         .lines()
-        .map(|line| {
-            line.split(',')
-                .map(|num| num.parse().unwrap())
-                .collect()
-        })
+        .map(|line| line.split(',').map(|num| num.parse().unwrap()).collect())
         .collect();
 
-    updates.iter()
-        .filter(|update| {
-            obeys_rules(update, &rules)
-        })
-        .map(|update| {
-            update[(update.len() - 1).div(2)]
-        })
+    updates
+        .iter()
+        .filter(|update| obeys_rules(update, &rules))
+        .map(|update| update[(update.len() - 1).div(2)])
         .sum()
 }
 
@@ -38,7 +32,8 @@ pub fn part_02(path: &str) -> u32 {
 
     let (rules, updates) = source.split_once("\n\n").unwrap();
 
-    let rules: Vec<(u32, u32)> = rules.lines()
+    let rules: Vec<(u32, u32)> = rules
+        .lines()
         .map(|line| {
             let (a, b) = line.split_once('|').unwrap();
             (a.parse().unwrap(), b.parse().unwrap())
@@ -47,13 +42,8 @@ pub fn part_02(path: &str) -> u32 {
 
     let updates: Vec<Vec<u32>> = updates
         .lines()
-        .map(|line| {
-            line.split(',')
-                .map(|num| num.parse().unwrap())
-                .collect()
-        })
+        .map(|line| line.split(',').map(|num| num.parse().unwrap()).collect())
         .collect();
-    
 
     let mut sum = 0;
     for update in updates.iter().filter(|update| !obeys_rules(update, &rules)) {
@@ -70,7 +60,7 @@ pub fn part_02(path: &str) -> u32 {
         }
 
         let result = toposort(&graph, None).unwrap();
-        
+
         sum += result[(result.len() - 1).div(2)]
     }
 

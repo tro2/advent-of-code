@@ -1,7 +1,10 @@
-use std::{collections::{HashMap, HashSet}, fs::read_to_string};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+};
 
 pub fn part_01(path: &str) -> u32 {
-    let source  = read_to_string(path).unwrap();
+    let source = read_to_string(path).unwrap();
     let row_len = source.find('\n').unwrap() + 1;
 
     let grid = Grid {
@@ -29,7 +32,7 @@ pub fn part_01(path: &str) -> u32 {
 }
 
 pub fn part_02(path: &str) -> u32 {
-    let source  = read_to_string(path).unwrap();
+    let source = read_to_string(path).unwrap();
     let row_len = source.find('\n').unwrap() + 1;
     let idx = source.find('^').unwrap();
 
@@ -37,7 +40,7 @@ pub fn part_02(path: &str) -> u32 {
         data: source.as_bytes(),
         row_len,
         col_len: source.len() / row_len,
-        idx
+        idx,
     };
 
     let mut outputs = HashSet::new();
@@ -81,7 +84,7 @@ struct Grid<'a> {
     data: &'a [u8],
     row_len: usize,
     col_len: usize,
-    idx: usize
+    idx: usize,
 }
 
 impl Grid<'_> {
@@ -102,9 +105,8 @@ enum Direction {
     North,
     South,
     East,
-    West
+    West,
 }
-
 
 impl Direction {
     fn to_coord(self) -> (isize, isize) {
@@ -157,7 +159,7 @@ impl GridIter<'_> {
             Direction::North => Direction::East,
             Direction::East => Direction::South,
             Direction::South => Direction::West,
-            Direction::West => Direction::North
+            Direction::West => Direction::North,
         }
     }
 
@@ -184,12 +186,10 @@ impl GridIter<'_> {
                 return None;
             }
 
-            return Some(idx as usize)
+            return Some(idx as usize);
         }
         None
     }
-
-    
 }
 
 #[cfg(test)]
@@ -217,7 +217,7 @@ mod tests {
             data: DATA.as_bytes(),
             row_len: 11,
             col_len: 10,
-            idx: guard_idx
+            idx: guard_idx,
         };
 
         assert_eq!(grid.iter().coord_to_idx((4, 6), false).unwrap(), guard_idx)
@@ -229,7 +229,7 @@ mod tests {
             data: DATA.as_bytes(),
             row_len: 11,
             col_len: 10,
-            idx: 5
+            idx: 5,
         };
 
         let mut iter = grid.iter();

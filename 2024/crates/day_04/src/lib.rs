@@ -1,7 +1,8 @@
 use std::{fs::read_to_string, ops::Sub};
 
 pub fn part_01(path: &str) -> u32 {
-    let mut source = read_to_string(path).unwrap()
+    let mut source = read_to_string(path)
+        .unwrap()
         .lines()
         .map(|line| format!(".{}", line))
         .collect::<Vec<String>>()
@@ -12,22 +13,30 @@ pub fn part_01(path: &str) -> u32 {
 
     let c_box = CharBox {
         chars: source.as_bytes(),
-        row_len: source.find("\n").unwrap() + 1
+        row_len: source.find("\n").unwrap() + 1,
     };
 
     let target = vec!['X', 'M', 'A', 'S'];
 
     let row = c_box.iter(IterDirection::Row).count_substring(&target);
     let col = c_box.iter(IterDirection::Column).count_substring(&target);
-    let nw = c_box.iter(IterDirection::DiagSWtoNE).count_substring(&target);
-    let ne = c_box.iter(IterDirection::DiagNWtoSE).count_substring(&target);
-    
+    let nw = c_box
+        .iter(IterDirection::DiagSWtoNE)
+        .count_substring(&target);
+    let ne = c_box
+        .iter(IterDirection::DiagNWtoSE)
+        .count_substring(&target);
+
     let target = vec!['S', 'A', 'M', 'X'];
-    
+
     let row_rev = c_box.iter(IterDirection::Row).count_substring(&target);
     let col_rev = c_box.iter(IterDirection::Column).count_substring(&target);
-    let nw_rev = c_box.iter(IterDirection::DiagSWtoNE).count_substring(&target);
-    let ne_rev = c_box.iter(IterDirection::DiagNWtoSE).count_substring(&target);
+    let nw_rev = c_box
+        .iter(IterDirection::DiagSWtoNE)
+        .count_substring(&target);
+    let ne_rev = c_box
+        .iter(IterDirection::DiagNWtoSE)
+        .count_substring(&target);
 
     row + row_rev + col + col_rev + nw + nw_rev + ne + ne_rev
 }
@@ -39,32 +48,13 @@ pub fn part_02(path: &str) -> u32 {
     // iterate over all 3 by 3 blocks in the source string
 
     let patterns = [
-        [
-            "M M",
-            " A ",
-            "S S"
-        ],
-        [
-            "S S",
-            " A ",
-            "M M"
-        ],
-        [
-            "M S",
-            " A ",
-            "M S"
-        ],
-        [
-            "S M",
-            " A ",
-            "S M"
-        ]
+        ["M M", " A ", "S S"],
+        ["S S", " A ", "M M"],
+        ["M S", " A ", "M S"],
+        ["S M", " A ", "S M"],
     ];
 
-
-    let lines = source
-        .lines()
-        .collect::<Vec<&str>>();
+    let lines = source.lines().collect::<Vec<&str>>();
 
     let line_groups = lines.windows(3);
 
@@ -82,10 +72,9 @@ pub fn part_02(path: &str) -> u32 {
             }
         }
 
-        sum += blocks.iter()
-            .filter(|block| {
-                patterns.iter().any(|pattern| compare(block, pattern))
-            })
+        sum += blocks
+            .iter()
+            .filter(|block| patterns.iter().any(|pattern| compare(block, pattern)))
             .count()
     }
 
@@ -94,16 +83,16 @@ pub fn part_02(path: &str) -> u32 {
 
 fn compare(block: &[&str], pattern: &[&str; 3]) -> bool {
     block.iter().zip(pattern.iter()).all(|(b, p)| {
-        b.bytes().zip(p.bytes()).all(|(b_byte, p_byte)| {
-            p_byte == b' ' || b_byte == p_byte
-        })
+        b.bytes()
+            .zip(p.bytes())
+            .all(|(b_byte, p_byte)| p_byte == b' ' || b_byte == p_byte)
     })
 }
 
 #[derive(Debug)]
 struct CharBox<'a> {
-    chars: &'a[u8],
-    row_len: usize
+    chars: &'a [u8],
+    row_len: usize,
 }
 
 impl<'a> CharBox<'a> {
@@ -112,7 +101,7 @@ impl<'a> CharBox<'a> {
             IterDirection::Row => (0, 0),
             IterDirection::Column => (0, 0),
             IterDirection::DiagSWtoNE => (0, 0),
-            IterDirection::DiagNWtoSE => (self.row_len - 1, 0)
+            IterDirection::DiagNWtoSE => (self.row_len - 1, 0),
         };
         CharBoxIter {
             char_box: self,
@@ -160,7 +149,7 @@ impl<'a> CharBoxIter<'a> {
     fn coords_to_idx(&self, x: isize, y: isize) -> Option<usize> {
         let row_len = self.row_len() as isize;
         let col_len = self.col_len() as isize;
-        if  x < 0 || x >= row_len || y < 0 || y >= col_len {
+        if x < 0 || x >= row_len || y < 0 || y >= col_len {
             return None;
         }
         Some((y * row_len + x) as usize)
@@ -229,18 +218,18 @@ impl<'a> Iterator for CharBoxIter<'a> {
                 if self.col_idx > self.col_len() {
                     return None;
                 }
-                
+
                 let result = self.char_box.chars[self.index];
-                
+
                 // Move down current column
                 self.index += self.row_len();
-                
+
                 // If we hit bottom, move to top of next column
                 if self.index >= self.total_len() {
                     self.col_idx += 1;
                     self.index = self.col_idx;
                 }
-                
+
                 Some(result)
             }
             IterDirection::DiagSWtoNE => {
@@ -256,20 +245,18 @@ impl<'a> Iterator for CharBoxIter<'a> {
                 let (x, y) = self.pos();
                 if let Some(idx) = self.coords_to_idx(x + 1, y - 1) {
                     self.index = idx;
-                } else { // if that's not valid, start at next row
+                } else {
+                    // if that's not valid, start at next row
                     self.col_idx += 1;
-                    self.index =
-                        if self.col_idx >= self.col_len() {
-                            self.coords_to_idx(
-                                self.col_idx.sub(self.col_len() - 1) as isize,
-                                self.col_len().sub(1) as isize
-                            ).unwrap_or(0)
-                        } else {
-                            self.coords_to_idx(
-                                0,
-                                self.col_idx as isize
-                            ).unwrap_or(0)
-                        };
+                    self.index = if self.col_idx >= self.col_len() {
+                        self.coords_to_idx(
+                            self.col_idx.sub(self.col_len() - 1) as isize,
+                            self.col_len().sub(1) as isize,
+                        )
+                        .unwrap_or(0)
+                    } else {
+                        self.coords_to_idx(0, self.col_idx as isize).unwrap_or(0)
+                    };
                 }
 
                 Some(result)
@@ -287,20 +274,19 @@ impl<'a> Iterator for CharBoxIter<'a> {
                 let (x, y) = self.pos();
                 if let Some(idx) = self.coords_to_idx(x - 1, y - 1) {
                     self.index = idx;
-                } else { // if that's not valid, start at next row
+                } else {
+                    // if that's not valid, start at next row
                     self.col_idx += 1;
-                    self.index =
-                        if self.col_idx >= self.col_len() {
-                            self.coords_to_idx(
-                                max_cols as isize - self.col_idx as isize,
-                                self.col_len().sub(1) as isize
-                            ).unwrap_or(0)
-                        } else {
-                            self.coords_to_idx(
-                                self.row_len().sub(1) as isize,
-                                self.col_idx as isize
-                            ).unwrap()
-                        };
+                    self.index = if self.col_idx >= self.col_len() {
+                        self.coords_to_idx(
+                            max_cols as isize - self.col_idx as isize,
+                            self.col_len().sub(1) as isize,
+                        )
+                        .unwrap_or(0)
+                    } else {
+                        self.coords_to_idx(self.row_len().sub(1) as isize, self.col_idx as isize)
+                            .unwrap()
+                    };
                 }
 
                 Some(result)
@@ -315,10 +301,7 @@ mod tests {
     #[test]
     fn row_iter() {
         let chars = [
-             1, 2, 3, 4, 5,
-             6, 7, 8, 9,10,
-            11,12,13,14,15,
-            16,17,18,19,20
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
         ];
 
         let b = CharBox {
@@ -335,10 +318,7 @@ mod tests {
     #[test]
     fn col_iter() {
         let chars = [
-            1, 5, 9,13,17,
-            2, 6,10,14,18,
-            3, 7,11,15,19,
-            4, 8,12,16,20
+            1, 5, 9, 13, 17, 2, 6, 10, 14, 18, 3, 7, 11, 15, 19, 4, 8, 12, 16, 20,
         ];
 
         let b = CharBox {
@@ -351,14 +331,11 @@ mod tests {
 
         assert_eq!(output, expected);
     }
-    
+
     #[test]
     fn diag_nw_iter() {
         let chars = [
-            1, 3, 6,10,14,
-            2, 5, 9,13,17,
-            4, 8,12,16,19,
-            7,11,15,18,20
+            1, 3, 6, 10, 14, 2, 5, 9, 13, 17, 4, 8, 12, 16, 19, 7, 11, 15, 18, 20,
         ];
 
         let b = CharBox {
@@ -375,10 +352,7 @@ mod tests {
     #[test]
     fn diag_ne_iter() {
         let chars = [
-            14,10, 6, 3, 1,
-            17,13, 9, 5, 2,
-            19,16,12, 8, 4,
-            20,18,15,11, 7
+            14, 10, 6, 3, 1, 17, 13, 9, 5, 2, 19, 16, 12, 8, 4, 20, 18, 15, 11, 7,
         ];
 
         let b = CharBox {
@@ -391,5 +365,4 @@ mod tests {
 
         assert_eq!(output, expected);
     }
-
 }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader};
 use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 pub fn part_01(path: &str) -> u32 {
     let lines = BufReader::new(File::open(path).unwrap()).lines();
@@ -20,7 +20,8 @@ pub fn part_01(path: &str) -> u32 {
     right_nums.sort();
 
     // return sum of diffs
-    left_nums.iter()
+    left_nums
+        .iter()
         .zip(right_nums.iter())
         .map(|(&left, &right)| left.abs_diff(right))
         .sum()
@@ -47,9 +48,7 @@ pub fn part_02(path: &str) -> u32 {
         if left_counts.contains_key(num) {
             sum += num * left_counts.get(num).unwrap();
         } else {
-            let count = right_nums.iter()
-                .filter(|&&x| x == *num)
-                .count() as u32;
+            let count = right_nums.iter().filter(|&&x| x == *num).count() as u32;
             left_counts.insert(num, count);
 
             sum += num * count;
