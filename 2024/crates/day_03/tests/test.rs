@@ -1,7 +1,5 @@
 use std::fs::read_to_string;
 
-use day_03;
-
 #[test]
 fn d3_p1_example() {
     let input = read_to_string("tests/example.txt").expect("Failed to read input file");
