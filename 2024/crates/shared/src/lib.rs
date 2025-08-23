@@ -1,5 +1,6 @@
 use std::{error::Error, fmt, ops::Add};
 
+/// Represents a vector in 2D space
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 pub struct Point {
     pub x: isize,
@@ -7,6 +8,10 @@ pub struct Point {
 }
 
 impl Point {
+    /// Constructor that creates a Point from a usize.
+    /// 
+    /// ### Panics
+    /// This function does not perform bounds checks, take care to pass in appropriate sized values
     pub fn from_u(x: usize, y: usize) -> Self {
         Self {
             x: x as isize,
@@ -14,10 +19,12 @@ impl Point {
         }
     }
 
+    /// Creates a new point
     pub fn new(x: isize, y: isize) -> Self {
         Self { x, y }
     }
 
+    /// Returns the euclidean distance between this point and another point.
     pub fn euclid_dist(&self, b: Self) -> Self {
         Self {
             x: (b.x - self.x).abs(),
@@ -25,6 +32,10 @@ impl Point {
         }
     }
 
+    /// Scales the point by a given factor.
+    /// 
+    /// ### Panics
+    /// Size bounds are not checked, take care to not pass in too large of a value
     pub fn scale_by(&self, factor: isize) -> Self {
         Self {
             x: self.x * factor,
@@ -32,19 +43,23 @@ impl Point {
         }
     }
 
+    /// Returns the components of this point as a tuple.
     pub fn components(&self) -> (isize, isize) {
         (self.x, self.y)
     }
 }
 
+/// Trait describing how to traverse a 1D array as a 2D array
 pub trait Grid2D {
     fn row_len(&self) -> usize;
     fn col_len(&self) -> usize;
 
+    /// Translates an array index into a point on the grid. Note that this does not do bounds-checks
     fn idx_to_coords(&self, idx: usize) -> Point {
         Point::from_u(idx % self.row_len(), idx / self.row_len())
     }
 
+    /// Translates a coordinate into an array index. This does do bounds checks
     fn coord_to_idx(&self, coord: Point) -> Option<usize> {
         let (x, y) = coord.components();
         if (0..self.row_len() as isize).contains(&x) && (0..self.col_len() as isize).contains(&y) {
@@ -78,6 +93,8 @@ impl Add<Direction> for Point {
     }
 }
 
+/// Describes directions that can be traversed on a 2D grid.
+/// Contains utilities to translate between a given direction and its basis unit vectors
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 pub enum Direction {
     NORTH,
@@ -91,6 +108,7 @@ pub enum Direction {
 }
 
 impl Direction {
+    /// Translates a Direction into the basis vector used to indicate that direction
     pub const fn point(&self) -> Point {
         match self {
             Direction::NORTH => Point { x: 0, y: -1 },
@@ -104,6 +122,7 @@ impl Direction {
         }
     }
 
+    /// Returns the direction 90 degrees clockwise of a given direction
     pub const fn cw_card(&self) -> Self {
         match self {
             Direction::NORTH => Direction::EAST,
@@ -117,6 +136,7 @@ impl Direction {
         }
     }
 
+    /// Returns the direction 180 degrees of a given direction
     pub const fn rev(&self) -> Self {
         match self {
             Direction::NORTH => Direction::SOUTH,
@@ -130,6 +150,7 @@ impl Direction {
         }
     }
 
+    /// Returns the direction 90 degrees counter-clockwise of a given direction
     pub const fn ccw_card(&self) -> Self {
         match self {
             Direction::NORTH => Direction::WEST,
@@ -143,15 +164,7 @@ impl Direction {
         }
     }
 
-    // pub const NORTH: Point = Point { x: 0, y: -1 };
-    // pub const SOUTH: Point = Point { x: 0, y: 1 };
-    // pub const EAST: Point = Point { x: 1, y: 0 };
-    // pub const WEST: Point = Point { x: -1,y:  0 };
-    // pub const NORTHEAST: Point = Point { x: 1, y: -1 };
-    // pub const NORTHWEST: Point = Point { x: -1,y: -1 };
-    // pub const SOUTHEAST: Point = Point { x: 1, y: 1 };
-    // pub const SOUTHWEST: Point = Point { x: -1,y:  1 };
-
+    /// Array of all 4 cardinal directions as unit vectors
     pub const CARDINALS: [Point; 4] = [
         Direction::NORTH.point(),
         Direction::SOUTH.point(),
@@ -159,6 +172,7 @@ impl Direction {
         Direction::WEST.point(),
     ];
 
+    /// Array of all 8 cardinal and secondary directions as unit vectors
     pub const ALL: [Point; 8] = [
         Direction::NORTH.point(),
         Direction::SOUTH.point(),
@@ -207,13 +221,12 @@ impl<'a> TryFrom<&'a str> for DefaultGrid<'a> {
     type Error = GridError;
 
     fn try_from(s: &'a str) -> Result<Self, GridError> {
-        let n_pos = s.find('\n');
-        if n_pos.is_none() {
+        let Some(newline_idx) = s.find('\n') else {
             return Err(GridError {
                 kind: GridErrorType::NoRows,
             });
-        }
-        let row_len = n_pos.unwrap() + 1;
+        };
+        let row_len = newline_idx + 1;
 
         if s.len() % row_len != 0 {
             return Err(GridError {
