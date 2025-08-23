@@ -41,7 +41,7 @@ pub fn part_02(input: &str) -> Result<u32, String> {
     let mut perform_op = true;
 
     for line in input.lines() {
-        for reg_match in search_reg.find_iter(&line) {
+        for reg_match in search_reg.find_iter(line) {
             let mat = reg_match.as_str();
             match mat {
                 "do()" => {

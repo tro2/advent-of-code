@@ -1,5 +1,3 @@
-use day_11;
-
 #[test]
 fn d11_p1_sm() {
     assert_eq!(day_11::part_01("tests/sm.txt", 1), 7)

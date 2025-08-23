@@ -8,8 +8,7 @@ pub fn part_01(path: &str, depth: u32) -> usize {
         .map(|num| num.parse().unwrap())
         .collect();
 
-    std::iter::repeat(Vec::<usize>::new())
-        .take(depth as usize)
+    std::iter::repeat_n(Vec::<usize>::new(), depth as usize)
         .for_each(|mut arr| {
             for num in &nums {
                 let num = *num;

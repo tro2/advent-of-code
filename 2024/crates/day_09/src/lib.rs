@@ -12,10 +12,10 @@ pub fn part_01(path: &str) -> usize {
     for (idx, ch) in source.chars().enumerate() {
         let num = ch.to_digit(10).unwrap() as usize;
         if idx % 2 == 0 {
-            strbuf.extend(std::iter::repeat(Fileblock::new(id)).take(num));
+            strbuf.extend(std::iter::repeat_n(Fileblock::new(id), num));
             id += 1;
         } else {
-            strbuf.extend(std::iter::repeat(Fileblock::new(-1)).take(num));
+            strbuf.extend(std::iter::repeat_n(Fileblock::new(-1), num));
         }
     }
 
@@ -54,7 +54,7 @@ pub fn part_02(path: &str) -> usize {
     for (idx, ch) in source.chars().enumerate() {
         let num = ch.to_digit(10).unwrap() as usize;
         if idx % 2 == 0 {
-            files.extend(std::iter::repeat(FileChunk::new(id, num, files.len())).take(num));
+            files.extend(std::iter::repeat_n(FileChunk::new(id, num, files.len()), num));
             id += 1;
         } else {
             if num == 0 {
@@ -66,7 +66,7 @@ pub fn part_02(path: &str) -> usize {
             } else {
                 store.insert(num, BTreeSet::from([files.len()]));
             }
-            files.extend(std::iter::repeat(FileChunk::new(-1, num, files.len())).take(num));
+            files.extend(std::iter::repeat_n(FileChunk::new(-1, num, files.len()), num));
         }
     }
 
@@ -121,15 +121,14 @@ pub fn part_02(path: &str) -> usize {
                     store.insert(new_space.size, BTreeSet::from([new_space.start_idx]));
                 }
 
-                let comb = std::iter::repeat(swap)
-                    .take(curr.size)
-                    .chain(std::iter::repeat(new_space).take(new_space.size));
+                let comb = std::iter::repeat_n(swap, curr.size)
+                    .chain(std::iter::repeat_n(new_space, new_space.size));
 
                 files.splice(idx..idx + curr.size + new_space.size, comb);
             } else {
                 files.splice(
                     idx..idx + curr.size,
-                    std::iter::repeat(swap).take(curr.size),
+                    std::iter::repeat_n(swap, curr.size),
                 );
             }
 
@@ -138,46 +137,41 @@ pub fn part_02(path: &str) -> usize {
             // solidfy space where curr used to exist into 1 continuous empty file
             let prev = files[end - 1];
             let next = files.get(end + 1);
-            let (end_space, to_remove) = if prev.id == -1 {
-                if next.is_some() && next.unwrap().id == -1 {
-                    let next = next.unwrap();
-                    (
-                        FileChunk {
-                            id: -1,
-                            start_idx: prev.start_idx,
-                            size: prev.size + curr.size + next.size,
-                        },
-                        vec![prev, *next],
-                    )
-                } else {
-                    (
-                        FileChunk {
-                            id: -1,
-                            start_idx: prev.start_idx,
-                            size: prev.size + curr.size,
-                        },
-                        vec![prev],
-                    )
-                }
-            } else if next.is_some() && next.unwrap().id == -1 {
-                let next = next.unwrap();
-                (
+            let right_empty = next.copied().filter(|n| n.id == -1);
+
+            let (end_space, to_remove) = match (prev.id == -1, right_empty) {
+                (true, Some(next)) => (
+                    FileChunk {
+                        id: -1,
+                        start_idx: prev.start_idx,
+                        size: prev.size + curr.size + next.size,
+                    },
+                    vec![prev, next],
+                ),
+                (true, None) => (
+                    FileChunk {
+                        id: -1,
+                        start_idx: prev.start_idx,
+                        size: prev.size + curr.size,
+                    },
+                    vec![prev],
+                ),
+                (false, Some(next)) => (
                     FileChunk {
                         id: -1,
                         start_idx: curr.start_idx,
                         size: curr.size + next.size,
                     },
-                    vec![*next],
-                )
-            } else {
-                (
+                    vec![next],
+                ),
+                (false, None) => (
                     FileChunk {
                         id: -1,
                         start_idx: curr.start_idx,
                         size: curr.size,
                     },
                     Vec::new(),
-                )
+                ),
             };
 
             // update empty space map
@@ -192,7 +186,7 @@ pub fn part_02(path: &str) -> usize {
             }
             files.splice(
                 end_space.start_idx..end_space.start_idx + end_space.size,
-                std::iter::repeat(end_space).take(end_space.size),
+                std::iter::repeat_n(end_space, end_space.size),
             );
         }
 
