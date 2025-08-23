@@ -1,5 +1,3 @@
-use day_01;
-
 #[test]
 fn d1_p1_example() {
     assert_eq!(day_01::part_01("tests/example.txt"), 11);
