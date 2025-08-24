@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use shared::{DefaultGrid, Direction, Grid2D, Point};
+use shared::{DefaultGrid, Direction, Point};
 
 /// # Errors
 /// 
@@ -11,8 +11,7 @@ pub fn solve(input: &str) -> Result<(usize, usize), String> {
     let mut part_two: usize = 0;
     let mut visited = HashSet::new();
 
-    for (idx, plant) in grid.iter_cells() {
-        let point = grid.idx_to_coords(idx);
+    for (point, plant) in grid.iter_cells() {
         if visited.contains(&point) {
             continue;
         }
@@ -46,8 +45,8 @@ pub fn solve(input: &str) -> Result<(usize, usize), String> {
         }
 
         for &(point, dir) in &edges {
-            let r = dir.cw_card();
-            let l = dir.ccw_card();
+            let r = dir.clockwise();
+            let l = dir.counter_clockwise();
 
             sides += usize::from(!check(point + l) || check(point + l + dir));
             sides += usize::from(!check(point + r) || check(point + r + dir));

@@ -137,13 +137,13 @@ struct Grid<'a> {
 
 impl Grid<'_> {
     fn idx_to_coords(&self, idx: usize) -> Point {
-        Point::from_u(idx % self.row_len, idx / self.row_len)
+        Point::try_from((idx % self.row_len, idx / self.row_len)).unwrap()
     }
 
     fn coord_to_idx(&self, coord: Point) -> Option<usize> {
         let (x, y) = coord.components();
-        if (0..self.row_len as isize).contains(&x) && (0..self.col_len as isize).contains(&y) {
-            Some((y * self.row_len as isize + x) as usize)
+        if (0..self.row_len as i32).contains(&x) && (0..self.col_len as i32).contains(&y) {
+            Some((y * self.row_len as i32 + x) as usize)
         } else {
             None
         }

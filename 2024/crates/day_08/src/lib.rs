@@ -19,7 +19,7 @@ pub fn part_01(path: &str) -> u32 {
             continue;
         }
 
-        let pos = Point::from_u(pos % row_len, pos / row_len);
+        let pos = Point::new(i32::try_from(pos % row_len).unwrap(), i32::try_from(pos / row_len).unwrap());
 
         if let Some(set) = antennaes.get_mut(&ch) {
             set.push(pos);
@@ -93,7 +93,7 @@ pub fn part_02(path: &str) -> u32 {
             continue;
         }
 
-        let pos = Point::from_u(pos % row_len, pos / row_len);
+        let pos = Point::new(i32::try_from(pos % row_len).unwrap(), i32::try_from(pos / row_len).unwrap());
 
         if let Some(set) = antennaes.get_mut(&ch) {
             set.push(pos);
@@ -149,8 +149,8 @@ fn gen_positions(
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 struct Slope {
-    dx: isize,
-    dy: isize,
+    dx: i32,
+    dy: i32,
 }
 
 impl Slope {
@@ -165,8 +165,8 @@ impl Slope {
         CoordIter {
             curr: start,
             slope: *self,
-            row_len: row_len as isize,
-            col_len: col_len as isize,
+            row_len: row_len as i32,
+            col_len: col_len as i32,
         }
     }
 }
@@ -185,8 +185,8 @@ impl Add<Slope> for Point {
 struct CoordIter {
     slope: Slope,
     curr: Point,
-    row_len: isize,
-    col_len: isize,
+    row_len: i32,
+    col_len: i32,
 }
 
 impl Iterator for CoordIter {
@@ -218,7 +218,7 @@ fn get_slope(a: Point, b: Point) -> Slope {
     }
 }
 
-fn gcd(a: isize, b: isize) -> isize {
+fn gcd(a: i32, b: i32) -> i32 {
     if b == 0 {
         a.abs()
     } else {
