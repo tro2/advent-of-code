@@ -49,8 +49,9 @@ impl Point {
     }
 }
 
-/// Trait describing how to traverse a 1D array as a 2D array
+/// Trait describing how to traverse a 1D byte array as a 2D byte array
 pub trait Grid2D {
+    fn data(&self) -> &[u8];
     fn row_len(&self) -> usize;
     fn col_len(&self) -> usize;
 
@@ -67,6 +68,22 @@ pub trait Grid2D {
         } else {
             None
         }
+    }
+
+    /// Returns an iterator over the bytes in the grid, excluding newlines, with absolute indices.
+    fn iter_cells(&'_ self) -> GridByteIter<'_> {
+        GridByteIter {
+            data: self.data(),
+            ref_idx: 0
+        }
+    }
+
+    fn contains(&self, coord: Point) -> bool {
+        self.coord_to_idx(coord).is_some()
+    }
+
+    fn at(&self, coord: Point) -> Option<u8> {
+        self.coord_to_idx(coord).map(|idx| self.data()[idx])
     }
 }
 
@@ -172,6 +189,13 @@ impl Direction {
         Direction::WEST.point(),
     ];
 
+    pub const CARDINAL_DIRS: [Direction; 4] = [
+        Direction::NORTH,
+        Direction::SOUTH,
+        Direction::EAST,
+        Direction::WEST,
+    ];
+
     /// Array of all 8 cardinal and secondary directions as unit vectors
     pub const ALL: [Point; 8] = [
         Direction::NORTH.point(),
@@ -182,6 +206,17 @@ impl Direction {
         Direction::NORTHWEST.point(),
         Direction::SOUTHEAST.point(),
         Direction::SOUTHWEST.point(),
+    ];
+
+    pub const ALL_DIRS: [Direction; 8] = [
+        Direction::NORTH,
+        Direction::SOUTH,
+        Direction::EAST,
+        Direction::WEST,
+        Direction::NORTHEAST,
+        Direction::NORTHWEST,
+        Direction::SOUTHEAST,
+        Direction::SOUTHWEST,
     ];
 }
 
@@ -194,6 +229,7 @@ pub struct GridError {
 enum GridErrorType {
     NotSquare,
     NoRows,
+    NoData
 }
 
 impl Error for GridError {}
@@ -206,6 +242,9 @@ impl fmt::Display for GridError {
             }
             GridErrorType::NoRows => {
                 write!(f, "no rows (newlines) found")
+            }
+            GridErrorType::NoData => {
+                write!(f, "no data found (only newlines)")
             }
         }
     }
@@ -228,6 +267,12 @@ impl<'a> TryFrom<&'a str> for DefaultGrid<'a> {
         };
         let row_len = newline_idx + 1;
 
+        if row_len == 1 {
+            return Err(GridError {
+                kind: GridErrorType::NoData,
+            });
+        }
+
         if s.len() % row_len != 0 {
             return Err(GridError {
                 kind: GridErrorType::NotSquare,
@@ -244,12 +289,43 @@ impl<'a> TryFrom<&'a str> for DefaultGrid<'a> {
 }
 
 impl Grid2D for DefaultGrid<'_> {
+    fn data(&self) -> &[u8] {
+        self.data
+    }
+
     fn row_len(&self) -> usize {
         self.row_len
     }
 
     fn col_len(&self) -> usize {
         self.col_len
+    }
+}
+
+/// Iterator over DefaultGrid bytes excluding newlines, with real indices.
+pub struct GridByteIter<'a> {
+    data: &'a [u8],
+    ref_idx: usize
+}
+
+impl<'a> Iterator for GridByteIter<'a> {
+    type Item = (usize, u8);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.ref_idx >= self.data.len() {
+            return None;
+        }
+
+        let curr = self.data[self.ref_idx];
+        let curr_idx = self.ref_idx;
+
+        if curr == b'\n' {
+            self.ref_idx += 1;
+            self.next()
+        } else {
+            self.ref_idx += 1;
+            Some((curr_idx, curr))
+        }
     }
 }
 

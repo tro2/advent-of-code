@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 shared = { version = "0.1.0", path = "../shared" }
+
+[lints]
+workspace = true
