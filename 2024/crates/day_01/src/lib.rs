@@ -1,42 +1,48 @@
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 
-pub fn part_01(path: &str) -> u32 {
-    let lines = BufReader::new(File::open(path).unwrap()).lines();
+/// # Errors
+/// Returns `Err` if any line does not contain exactly two numbers separated by three spaces
+pub fn part_01(input: &str) -> Result<u32, String> {
     let mut left_nums = Vec::new();
     let mut right_nums = Vec::new();
 
-    for line in lines.map_while(Result::ok) {
+    for line in input.lines() {
         let (left, right) = line
             .split_once("   ")
-            .map(|(l, r)| (l.parse::<u32>().unwrap(), r.parse::<u32>().unwrap()))
-            .unwrap();
+            .ok_or_else(|| format!("Failed to split line: {line}"))?;
+
+        let left = left.parse::<u32>().map_err(|e| format!("Failed to parse left number: {e}"))?;
+        let right = right.parse::<u32>().map_err(|e| format!("Failed to parse right number: {e}"))?;
+
         left_nums.push(left);
         right_nums.push(right);
     }
 
-    left_nums.sort();
-    right_nums.sort();
+    left_nums.sort_unstable();
+    right_nums.sort_unstable();
 
-    // return sum of diffs
-    left_nums
+    // Return sum of diffs
+    Ok(left_nums
         .iter()
         .zip(right_nums.iter())
         .map(|(&left, &right)| left.abs_diff(right))
-        .sum()
+        .sum())
 }
 
-pub fn part_02(path: &str) -> u32 {
-    let lines = BufReader::new(File::open(path).unwrap()).lines();
+/// # Errors
+/// Returns `Err` if any line does not contain exactly two numbers separated by three spaces
+pub fn part_02(input: &str) -> Result<u32, String> {
     let mut left_nums = Vec::new();
     let mut right_nums = Vec::new();
 
-    for line in lines.map_while(Result::ok) {
+    for line in input.lines() {
         let (left, right) = line
             .split_once("   ")
-            .map(|(l, r)| (l.parse::<u32>().unwrap(), r.parse::<u32>().unwrap()))
-            .unwrap();
+            .ok_or_else(|| format!("Failed to split line: {line}"))?;
+
+        let left = left.parse::<u32>().map_err(|e| format!("Failed to parse left number: {e}"))?;
+        let right = right.parse::<u32>().map_err(|e| format!("Failed to parse right number: {e}"))?;
+
         left_nums.push(left);
         right_nums.push(right);
     }
@@ -44,16 +50,17 @@ pub fn part_02(path: &str) -> u32 {
     let mut left_counts = HashMap::new();
     let mut sum = 0;
 
-    for num in left_nums.iter() {
-        if left_counts.contains_key(num) {
-            sum += num * left_counts.get(num).unwrap();
+    for num in &left_nums {
+        if let Some(count) = left_counts.get(num) {
+            sum += num * count;
         } else {
-            let count = right_nums.iter().filter(|&&x| x == *num).count() as u32;
+            let count = u32::try_from(right_nums.iter().filter(|&&x| x == *num).count())
+                .map_err(|e| format!("Failed to convert count to u32: {e}"))?;
             left_counts.insert(num, count);
 
             sum += num * count;
         }
     }
 
-    sum
+    Ok(sum)
 }
