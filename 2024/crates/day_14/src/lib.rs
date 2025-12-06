@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 
 pub fn part_01(path: &str) -> isize {
     let source = read_to_string(path).unwrap();
-    const SECONDS: isize = 100;
+    const SECONDS: i32 = 100;
 
     let (width, height, mut robots) = parse_data(&source);
     let mut quads = [0_isize; 4];
@@ -57,7 +57,7 @@ pub fn part_02(path: &str) -> isize {
     0
 }
 
-fn check_quadrant(pos: Point, width: isize, height: isize) -> Option<usize> {
+fn check_quadrant(pos: Point, width: i32, height: i32) -> Option<usize> {
     let w_mid = width / 2;
     let h_mid = height / 2;
 
@@ -73,7 +73,7 @@ fn check_quadrant(pos: Point, width: isize, height: isize) -> Option<usize> {
         .position(|quad| quad.0.contains(&pos.x) && quad.1.contains(&pos.y))
 }
 
-fn parse_data(source: &str) -> (isize, isize, Vec<Robot>) {
+fn parse_data(source: &str) -> (i32, i32, Vec<Robot>) {
     let mut data_iter = source.lines();
 
     let (width, height) = data_iter.next().unwrap().split_once(',').unwrap();
