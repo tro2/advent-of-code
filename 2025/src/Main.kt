@@ -1,10 +1,16 @@
 fun main() {
-//    println(Day1("Day1_ex.txt").part1())
-//    println(Day1("Day1_input.txt").part1())
-//    println(Day1("Day1_ex.txt").part2())
-//    println(Day1("Day1_input.txt").part2())
-    println(Day2("d2ex.txt").part1())
-    println(Day2("d2input.txt").part1())
-    println(Day2("d2ex.txt").part2())
-    println(Day2("d2input.txt").part2())
+    // test(::Day1, "Day1_ex.txt", "Day1_input.txt")
+    // test(::Day2, "d2ex.txt", "d2input.txt")
+    test(::Day3, "d3ex.txt", "d3input.txt")
+}
+
+fun <T> test(
+    ctor: (String) -> DayTemplate<T>,
+    vararg files: String
+) {
+    for (f in files) {
+        val day = ctor(f)
+        println("$f / part1 = ${day.part1()}")
+        println("$f / part2 = ${day.part2()}")
+    }
 }

@@ -5,7 +5,4 @@ abstract class DayTemplate<T>(private val fileName: String) {
 
     abstract fun part1(): T
     abstract fun part2(): T
-
-    fun test1(expected: T): Boolean = part1() == expected
-    fun test2(expected: T): Boolean = part2() == expected
 }
