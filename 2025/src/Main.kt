@@ -5,4 +5,12 @@ fun main() {
     } else {
         println("Day 1 test failed")
     }
+
+    val d1Input = Day1("Day1_input.txt")
+    val output = d1Input.part1()
+    if (d1Input.part1() == 1191) {
+        println("Day 1 input test passed")
+    } else {
+        println("Day 1 input test failed, output: $output")
+    }
 }
