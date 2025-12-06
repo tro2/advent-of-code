@@ -1,8 +1,6 @@
-import java.io.InputStream
+abstract class DayTemplate<T>(private val fileName: String) {
 
-abstract class DayTemplate<T>(fileName: String) {
-
-    protected val data: InputStream = this::class.java.getResourceAsStream(fileName)
+    protected fun data() = this::class.java.getResourceAsStream(fileName)
         ?: error("Could not load resource $fileName")
 
     abstract fun part1(): T
