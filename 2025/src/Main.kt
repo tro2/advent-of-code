@@ -4,7 +4,8 @@ fun main() {
     // test(::Day3, "d3ex.txt", "d3input.txt")
     // test(::Day4, "d4ex.txt", "d4input.txt")
     // test(::Day5, "d5ex.txt", "d5input.txt")
-    test(::Day6, "d6ex.txt", "d6input.txt")
+    // test(::Day6, "d6ex.txt", "d6input.txt")
+    test(::Day7, "d7ex.txt", "d7input.txt")
 }
 
 fun <T> test(
